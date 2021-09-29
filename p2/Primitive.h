@@ -34,7 +34,7 @@
 #define __Primitive_h
 
 #include "Component.h"
-#include "graphics/GLMeshArray.h"
+#include "graphics/GLMesh.h"
 
 namespace cg
 { // begin namespace cg
@@ -47,29 +47,35 @@ namespace cg
 class Primitive: public Component
 {
 public:
-  Primitive(GLMeshArray* mesh):
+  Color color{Color::white};
+
+  Primitive(TriangleMesh* mesh, const std::string& meshName):
     Component{"Primitive"},
-    _mesh{mesh}
+    _mesh{mesh},
+    _meshName(meshName)
   {
     // do nothing
   }
 
-  ~Primitive() override
-  {
-    delete _mesh;
-  }
-
-  Primitive* get() {
-      return this;
-  }
-
-  auto mesh() const
+  TriangleMesh* mesh() const
   {
     return _mesh;
   }
 
+  const char* const meshName() const
+  {
+    return _meshName.c_str();
+  }
+
+  void setMesh(TriangleMesh* mesh, const std::string& meshName)
+  {
+    _mesh = mesh;
+    _meshName = meshName;
+  }
+
 private:
-  GLMeshArray * _mesh;
+  Reference<TriangleMesh> _mesh;
+  std::string _meshName;
 
 }; // Primitive
 

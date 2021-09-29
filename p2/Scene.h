@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018 Orthrus Group.                               |
+//| Copyright (C) 2018, 2019 Orthrus Group.                         |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -28,7 +28,7 @@
 // Class definition for scene.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 25/08/2018
+// Last revision: 21/09/2019
 
 #ifndef __Scene_h
 #define __Scene_h
@@ -44,45 +44,34 @@ namespace cg
 //
 // Scene: scene class
 // =====
-
-    struct Root {
-        std::list <Reference<SceneObject>> _root;
-    };
-
 class Scene: public SceneNode
 {
-    public:
-      Color backgroundColor{Color::gray};
+public:
+  Color backgroundColor{Color::gray};
+  Color ambientLight{Color::black};
 
-      /// Constructs an empty scene.
-      Scene(const char* name):
-        SceneNode{name}
-      {
-        // do nothing
-      }
+  /// Constructs an empty scene.
+  Scene(const char* name):
+    SceneNode{name},
+    _root{"\0x1bRoot", *this}
+  {
+    SceneObject::makeUse(&_root);
+  }
 
-      void appendToRoot(Reference<SceneObject> ob) {
-          _root.push_back(ob);
-      }
+  /// Returns the root scene object of this scene.
+  auto root() const
+  {
+    return &_root;
+  }
 
-      void removeOfRoot(Reference<SceneObject> ob) {
-          _root.remove(ob);
-      }
+  auto root()
+  {
+    return &_root;
+  }
 
-      int getRootSize() {
-          return _root.size();
-      }
+private:
+  SceneObject _root;
 
-      std::list<Reference<SceneObject>>::iterator getRootListBegin() {
-          return _root.begin();
-      }
-
-      std::list<Reference<SceneObject>>::iterator getRootListEnd() {
-          return _root.end();
-      }
-
-    private:
-        std::list <Reference<SceneObject>> _root;
 }; // Scene
 
 } // end namespace cg
