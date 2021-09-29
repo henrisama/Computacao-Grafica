@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -28,9 +28,10 @@
 // Source file for scene object.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 07/09/2019
+// Last revision: 25/08/2018
 
 #include "SceneObject.h"
+#include "Scene.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,8 +44,102 @@ namespace cg
 void
 SceneObject::setParent(SceneObject* parent)
 {
-  // TODO
-  _parent = parent;
+	if (_parent == nullptr){
+		// cena atual precisa remover objeto da lista de objetos do própio
+		_scene->removeOfRoot(this);
+
+	}
+	else{
+		// pai atual precisa remover objeto da lista de objetos do próprio
+		_parent->removeOfChildren(this);
+	} 
+	_parent = parent;	
+}
+
+void 
+SceneObject::appendToChildren(Reference<SceneObject> ob) {
+	_children.push_back(ob);
+}
+
+void 
+SceneObject::removeOfChildren(Reference<SceneObject> ob) {
+	_children.remove(ob);
+}
+
+int
+SceneObject::getChildrenSize() {
+	return _children.size();
+}
+
+SceneObject*
+SceneObject::getParent() {
+	return this->_parent;
+}
+
+void
+SceneObject::deleteIt() {
+	_parent->removeOfChildren(this);
+}
+
+SceneNode*
+SceneObject::display(ImGuiTreeNodeFlags flag, SceneNode* current) {
+	if (_children.size() > 0) {
+		// com filhos para mostrar
+		auto open = ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+
+		if (open){
+			std::list<Reference<SceneObject>>::iterator it;
+			for (it = _children.begin(); it != _children.end(); ++it) {
+				current = (*it)->display(flag, current);
+			}
+
+			ImGui::TreePop();
+		}
+	}
+	else {
+		// sem filhos para mostrar
+		flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+	}
+
+	return current;
+}
+
+void
+SceneObject::render(GLSL::Program* program) {
+	if (!this->visible)
+		return;
+	if (this->primitive() == nullptr)
+		return;
+
+	program->setUniformMat4("transform", this->transform()->localToWorldMatrix());
+
+	auto m = this->primitive()->mesh();
+	m->bind();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+
+	if (_children.size() > 0) {
+		// tem filhos para renderizar
+		std::list<Reference<SceneObject>>::iterator it;
+		for (it = _children.begin(); it != _children.end(); ++it) {
+			it->get()->render(program);
+		}
+	}
 }
 
 } // end namespace cg

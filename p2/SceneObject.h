@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -28,13 +28,16 @@
 // Class definition for scene object.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 23/09/2019
+// Last revision: 25/08/2018
 
 #ifndef __SceneObject_h
 #define __SceneObject_h
 
 #include "SceneNode.h"
 #include "Transform.h"
+#include "Primitive.h"
+#include "imgui.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -53,12 +56,30 @@ public:
   bool visible{true};
 
   /// Constructs an empty scene object.
-  SceneObject(const char* name, Scene& scene):
+  SceneObject(const char* name, Scene* scene):
     SceneNode{name},
-    _scene{&scene},
+    _scene{scene},
     _parent{}
   {
-    addComponent(makeUse(&_transform));    
+
+    _components.push_back(new Transform);
+    _cit = _components.begin();
+    makeUse((Transform*) (*_cit)->get());
+    //makeUse(&_transform);
+  }
+
+  SceneObject(const char* name, Scene* scene, Primitive* primitive):
+    SceneNode{ name },
+    _scene{ scene },
+    _parent{}
+  {
+      _components.push_back(new Transform);
+      _cit = _components.begin();
+      makeUse((Transform*)(*_cit)->get());
+
+      _components.push_back(primitive);
+      _cit = --_components.end();
+
   }
 
   /// Returns the scene which this scene object belong to.
@@ -76,40 +97,48 @@ public:
   /// Sets the parent of this scene object.
   void setParent(SceneObject* parent);
 
-  /// Returns the transform of this scene object.
-  auto transform() const
-  {
-    return &_transform;
-  }
+  SceneObject* getParent();
 
+  void appendToChildren(Reference<SceneObject> ob);
+
+  void removeOfChildren(Reference<SceneObject> ob);
+
+  int getChildrenSize();
+
+  void deleteIt();
+
+  SceneNode* display(ImGuiTreeNodeFlags flag, SceneNode* current);
+
+  void render(GLSL::Program* program);
+
+
+  /// Returns the transform of this scene object.
   auto transform()
   {
-    return &_transform;
+    return (Transform*) (*_components.begin())->get();
+    //return this transform;
   }
 
-  void addComponent(Component* component)
+  Primitive* primitive()
   {
-    component->_sceneObject = this;
-    // TODO
-    _component = Component::makeUse(component); // temporary
+    if (_components.size() == 1)
+        return nullptr;
+    return (Primitive*) (*_cit)->get();
+    //return this primitive
   }
 
-  // **Begin temporary methods
-  // They should be replace by your child and component iterators
-  Component* component()
-  {
-    return _component;
-  }
-  // **End temporary methods
+  
 
 private:
   Scene* _scene;
   SceneObject* _parent;
-  Transform _transform;
-  // **Begin temporary attributes
-  // They should be replace by your child and component collections
-  Reference<Component> _component;
-  // **End temporary attributes
+  // Transform _transform;
+  
+  std::list <Reference<SceneObject>> _children;
+  std::list <Reference<SceneObject>>::iterator _sit;
+
+  std::list <Reference<Component>> _components;
+  std::list <Reference<Component>>::iterator _cit;
 
   friend class Scene;
 

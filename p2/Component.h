@@ -65,6 +65,11 @@ public:
   /// Returns the transform of this component.
   Transform* transform(); // implemented in SceneObject.h
 
+  Component* get() {
+      return this;
+  }
+
+
 protected:
   Component(const char* const typeName):
     _typeName{typeName}
