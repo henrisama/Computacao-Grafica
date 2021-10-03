@@ -56,7 +56,8 @@ public:
     _camera{new Camera}
   {
     SceneObject::makeUse(&_editor);
-    _editor.setParent(scene.root());
+    //_editor.setParent(scene.root());
+    _editor.setParent(nullptr);
     _editor.addComponent(_camera);
   }
 

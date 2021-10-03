@@ -45,10 +45,6 @@ namespace cg
 // Scene: scene class
 // =====
 
-    struct Root {
-        std::list <Reference<SceneObject>> _root;
-    };
-
 class Scene: public SceneNode
 {
     public:

@@ -57,6 +57,10 @@ public:
     // do nothing
   }
 
+  Primitive* get() {
+      return this;
+  }
+
   TriangleMesh* mesh() const
   {
     return _mesh;

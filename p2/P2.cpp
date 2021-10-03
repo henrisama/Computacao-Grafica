@@ -26,7 +26,16 @@ P2::buildScene()
   // **Begin initialization of temporary attributes
   // It should be replaced by your scene initialization
   {
-    auto o = new SceneObject{"Main Camera", *_scene};
+    auto camera = new Camera;
+
+    _newObject = new SceneObject{ "Main Camera", *_scene };
+    _newObject->addComponent(camera);
+    _scene->appendToRoot(_newObject);
+
+    _newObject = new SceneObject{ "Box 1", *_scene };
+    _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+    _scene->appendToRoot(_newObject);
+   /* auto o = new SceneObject{"Main Camera", *_scene};
     auto camera = new Camera;
 
     o->addComponent(camera);
@@ -35,7 +44,7 @@ P2::buildScene()
     o = new SceneObject{"Box 1", *_scene};
     o->addComponent(makePrimitive(_defaultMeshes.find("Box")));
     o->setParent(_scene->root());
-    _objects.push_back(o);
+    _objects.push_back(o);*/
     Camera::setCurrent(camera);
   }
   // **End initialization of temporary attributes
@@ -71,13 +80,45 @@ P2::hierarchyWindow()
   {
     if (ImGui::MenuItem("Empty Object"))
     {
-      // TODO: create an empty object.
+        std::string name = "";
+        name
+            .append("Object ")
+            .append(std::to_string(objectCount++));
+
+        if (_current != _scene)
+        {
+            SceneObject* ob = (SceneObject*)_current;
+            _newObject = new SceneObject{ name.c_str(), _scene };
+            _newObject->setParent(ob);
+            ob->appendToChildren(_newObject);
+        }
+        else {
+            Scene* ob = (Scene*)_current;
+            ob->appendToRoot(new SceneObject{ name.c_str(), _scene });
+        }
     }
     if (ImGui::BeginMenu("3D Object"))
     {
       if (ImGui::MenuItem("Box"))
       {
-        // TODO: create a new box.
+          std::string name = "";
+          name
+              .append("Box ")
+              .append(std::to_string(boxCount++));
+
+          if (_current != _scene) {
+              SceneObject* ob = (SceneObject*)_current;
+              _newObject = new SceneObject{ name.c_str(), _scene };
+              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+              _newObject->setParent(ob);
+              ob->appendToChildren(_newObject);
+          }
+          else {
+              Scene* ob = (Scene*)_current;
+              _newObject = new SceneObject{ name.c_str(), _scene };
+              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+              ob->appendToRoot(_newObject);
+          }
       }
       if (ImGui::MenuItem("Sphere"))
       {
@@ -104,7 +145,7 @@ P2::hierarchyWindow()
     _current = _scene;
   if (open)
   {
-    for (const auto& o : _objects)
+    /*for (const auto& o : _objects)
     {
       auto f = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
@@ -113,6 +154,9 @@ P2::hierarchyWindow()
         o->name());
       if (ImGui::IsItemClicked())
         _current = o;
+    }*/
+    for (it = _scene->getRootListBegin(); it != _scene->getRootListEnd(); it++) {
+        _current = (*it)->display(f, _current);
     }
     ImGui::TreePop();
   }
@@ -320,9 +364,23 @@ P2::sceneObjectGui()
   if (ImGui::CollapsingHeader(object->transform()->typeName()))
     ImGui::TransformEdit(object->transform());
 
+  ImGui::Separator();
+
+  /*
+    Caso o primitivo do objeto seja nullptr, não entrar na condição
+    para não dar problema ao aceesar object->primitive()->typename()
+  */
+  /*if (object->primitive() != nullptr) {
+      if (ImGui::CollapsingHeader(object->primitive()->typeName()))
+      {
+          auto p = object->primitive();
+          ImGui::Text((std::string{ "Quantidade de Vertices: " } + std::to_string(p->mesh()->vertexCount())).c_str());
+      }
+  }*/
+
   // **Begin inspection of temporary components
   // It should be replaced by your component inspection
-  auto component = object->component();
+  auto component = object->primitive();
 
   if (auto p = dynamic_cast<Primitive*>(component))
   {
@@ -347,7 +405,11 @@ P2::sceneObjectGui()
     }
     else if (open)
     {
-      auto isCurrent = c == Camera::current();
+        bool isCurrent = false;
+        if (c == Camera::current()) {
+            isCurrent = true;
+        }
+      //auto isCurrent = c == Camera::current();
 
       ImGui::Checkbox("Current", &isCurrent);
       Camera::setCurrent(isCurrent ? c : nullptr);
@@ -642,6 +704,29 @@ P2::render()
 
   // **Begin rendering of temporary scene objects
   // It should be replaced by your rendering code (and moved to scene editor?)
+  GLWindow::render();
+
+  for (it = _scene->getRootListBegin(); it != _scene->getRootListEnd(); it++) {
+      (*it)->render(&_program, _current);
+  }
+
+  /*if (_current != _scene) {
+      SceneObject* ob = (SceneObject*)_current;
+      if (ob->visible && ob->primitive() != nullptr) {
+          _program.setUniformMat4("transform", ob->transform()->localToWorldMatrix());
+
+          auto m = ob->primitive()->mesh();
+          m->~TriangleMesh();
+          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+          glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+
+          m = (ob->primitive())->mesh();
+          m->setVertexColor(selectedWireframeColor);
+          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+          glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+          m->useVertexColors();
+      }
+  }*/
   auto ec = _editor->camera();
   const auto& p = ec->transform()->position();
   auto vp = vpMatrix(ec);
@@ -649,7 +734,8 @@ P2::render()
   _program.setUniformMat4("vpMatrix", vp);
   _program.setUniformVec4("ambientLight", _scene->ambientLight);
   _program.setUniformVec3("lightPosition", p);
-  for (const auto& o : _objects)
+
+  /*for (const auto& o : _objects)
   {
     if (!o->visible)
       continue;
@@ -665,7 +751,7 @@ P2::render()
       auto t = o->transform();
       _editor->drawAxes(t->position(), mat3f{t->rotation()});
     }
-  }
+  }*/
   // **End rendering of temporary scene objects
 }
 
