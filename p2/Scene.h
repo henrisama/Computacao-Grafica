@@ -52,14 +52,14 @@ public:
 
   /// Constructs an empty scene.
   Scene(const char* name):
-    SceneNode{name}
-    //_root{"\0x1bRoot", *this}
+    SceneNode{name},
+    _root{"\0x1bRoot", *this}
   {
-    //SceneObject::makeUse(&_root);
+    SceneObject::makeUse(&_root);
   }
 
   /// Returns the root scene object of this scene.
-  /*auto root() const
+  auto root() const
   {
     return &_root;
   }
@@ -67,31 +67,10 @@ public:
   auto root()
   {
     return &_root;
-  }*/
-
-  void appendToRoot(Reference<SceneObject> ob) {
-      _root.push_back(ob);
-  }
-
-  void removeOfRoot(Reference<SceneObject> ob) {
-      _root.remove(ob);
-  }
-
-  int getRootSize() {
-      return _root.size();
-  }
-
-  auto getRootListBegin() {
-      return _root.begin();
-  }
-
-  auto getRootListEnd() {
-      return _root.end();
   }
 
 private:
-  //SceneObject _root;
-  std::list <Reference<SceneObject>> _root;
+  SceneObject _root;
 
 }; // Scene
 

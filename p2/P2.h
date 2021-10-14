@@ -60,11 +60,7 @@ private:
   // **Begin temporary attributes
   // Those are just to show some geometry
   // They should be replaced by your scene hierarchy
-  //std::vector<Reference<SceneObject>> _objects;
-  int boxCount = 4;
-  int objectCount = 2;
-  std::list<Reference<SceneObject>>::iterator it;
-  Reference<SceneObject> _newObject;
+  std::vector<Reference<SceneObject>> _objects;
   // **End temporary attributes
   SceneNode* _current{};
   Color _selectedWireframeColor{255, 102, 0};

@@ -33,8 +33,7 @@
 #ifndef __SceneNode_h
 #define __SceneNode_h
 
-#include "core/SharedObject.h"
-#include <string>
+#include "core/NameableObject.h"
 
 namespace cg
 { // begin namespace cg
@@ -44,29 +43,22 @@ namespace cg
 //
 // SceneNode: generic scene node class
 // =========
-class SceneNode: public SharedObject
+class SceneNode: public NameableObject
 {
 public:
-  /// Returns the name of this scene node.
-  auto name() const
+  using NameableObject::NameableObject;
+
+  template <typename T>
+  T* as()
   {
-    return _name.c_str();
+    return dynamic_cast<T*>(this);
   }
 
-  /// Sets the name of this scene node.
-  void setName(const char* format, ...);
-
-protected:
-  SceneNode() = default;
-
-  SceneNode(const char* name):
-    _name{name}
+  template <typename T>
+  const T* as() const
   {
-    // do nothing
+    return dynamic_cast<const T*>(this);
   }
-
-private:
-  std::string _name;
 
 }; // SceneNode
 

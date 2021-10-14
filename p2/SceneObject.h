@@ -35,9 +35,6 @@
 
 #include "SceneNode.h"
 #include "Transform.h"
-#include "Primitive.h"
-#include "imgui.h"
-#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -61,7 +58,7 @@ public:
     _scene{&scene},
     _parent{}
   {
-    addComponent(makeUse(new Transform));    
+    addComponent(makeUse(&_transform));
   }
 
   /// Returns the scene which this scene object belong to.
@@ -79,74 +76,40 @@ public:
   /// Sets the parent of this scene object.
   void setParent(SceneObject* parent);
 
-  SceneObject* getParent();
-
-  void appendToChildren(Reference<SceneObject> ob);
-
-  void removeOfChildren(Reference<SceneObject> ob);
-
-  int getChildrenSize();
-
-  void deleteIt();
-
-  SceneNode* display(ImGuiTreeNodeFlags flag, SceneNode* current);
-
-  void render(GLSL::Program* program);
-
   /// Returns the transform of this scene object.
   auto transform() const
   {
-    return (Transform*)(*_components.begin())->get();
-    //return &_transform;
+    return &_transform;
   }
 
   auto transform()
   {
-    return (Transform*)(*_components.begin())->get();
-    //return &_transform;
+    return &_transform;
   }
 
   void addComponent(Component* component)
   {
     component->_sceneObject = this;
     // TODO
-    _components.push_back(Component::makeUse(component));
-    _cit = --_components.end();
-    //_component = Component::makeUse(component); // temporary
+    _component = Component::makeUse(component); // temporary
   }
 
   // **Begin temporary methods
   // They should be replace by your child and component iterators
-
-  Primitive* primitive()
+  Component* component()
   {
-      if (_components.size() == 1)
-          return nullptr;
-      return (Primitive*)(*_cit)->get();
-      //return this primitive
+    return _component;
   }
-
-    /*Component* component()
-    {
-        return (Component*) (*_cit)->get();
-    //return _components;
-    }*/
   // **End temporary methods
 
 private:
   Scene* _scene;
   SceneObject* _parent;
-  //Transform _transform;
+  Transform _transform;
   // **Begin temporary attributes
   // They should be replace by your child and component collections
-  //Reference<Component> _component;
+  Reference<Component> _component;
   // **End temporary attributes
-
-  std::list <Reference<SceneObject>> _children;
-  std::list <Reference<SceneObject>>::iterator _sit;
-
-  std::list <Reference<Component>> _components;
-  std::list <Reference<Component>>::iterator _cit;
 
   friend class Scene;
 
