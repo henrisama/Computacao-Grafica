@@ -35,6 +35,9 @@
 
 #include "SceneNode.h"
 #include "Transform.h"
+#include "imgui.h"
+#include "Primitive.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -79,12 +82,14 @@ public:
   /// Returns the transform of this scene object.
   auto transform() const
   {
-    return &_transform;
+    return (Transform*)(*_components.begin())->get();
+    //return &_transform;
   }
 
   auto transform()
   {
-    return &_transform;
+    return (Transform*)(*_components.begin())->get();
+    //return &_transform;
   }
 
   void addComponent(Component* component)
@@ -92,6 +97,14 @@ public:
     component->_sceneObject = this;
     // TODO
     _component = Component::makeUse(component); // temporary
+
+    _components.push_back(Component::makeUse(component));
+  }
+
+  /* */
+  void delComponent(Component* component)
+  {
+      _components.remove(component);
   }
 
   // **Begin temporary methods
@@ -102,6 +115,41 @@ public:
   }
   // **End temporary methods
 
+  /*  */
+  void append(Reference<SceneObject> ob)
+  {
+      _children.push_back(ob);
+  }
+
+  void remove(Reference<SceneObject> ob)
+  {
+      _children.remove(ob);
+  }
+
+  Primitive* primitive()
+  {
+      if (_components.size() == 1)
+          return nullptr;
+      _cit = --_components.end();
+      return (Primitive*)(*_cit)->get();
+      //return this primitive
+  }
+
+  bool hasChildren() 
+  {
+      if (_children.size() > 0)
+          return true;
+      return false;
+  }
+
+  std::list <Reference<SceneObject>> children() 
+  {
+      return _children;
+  }
+
+  /* Implementado no SceneObject.cpp */
+  SceneNode* display(ImGuiTreeNodeFlags flag, SceneNode* current);
+
 private:
   Scene* _scene;
   SceneObject* _parent;
@@ -110,6 +158,10 @@ private:
   // They should be replace by your child and component collections
   Reference<Component> _component;
   // **End temporary attributes
+  std::list <Reference<SceneObject>> _children;
+
+  std::list <Reference<Component>> _components;
+  std::list <Reference<Component>>::iterator _cit;
 
   friend class Scene;
 

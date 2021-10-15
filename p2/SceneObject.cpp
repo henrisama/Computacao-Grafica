@@ -31,6 +31,7 @@
 // Last revision: 07/09/2019
 
 #include "SceneObject.h"
+#include "Scene.h"
 
 namespace cg
 { // begin namespace cg
@@ -44,7 +45,54 @@ void
 SceneObject::setParent(SceneObject* parent)
 {
   // TODO
-  _parent = parent;
+	if (_parent == nullptr) {
+	// cena atual precisa remover objeto da lista de objetos do própio
+		//_scene->remove(this);
+	}
+	else {
+	// pai atual precisa remover objeto da lista de objetos do próprio
+		_parent->remove(this);
+	}
+	_parent = parent;
+}
+
+SceneNode*
+SceneObject::display(ImGuiTreeNodeFlags flag, SceneNode* current) 
+{
+	if (_children.size() > 0) {
+		// com filhos para mostrar
+		auto open = ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+
+		if (open) {
+			std::list<Reference<SceneObject>>::iterator it;
+			for (it = _children.begin(); it != _children.end(); ++it) {
+				current = (*it)->display(flag, current);
+			}
+
+			ImGui::TreePop();
+		}
+	}
+	else {
+		// sem filhos para mostrar
+		flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+	}
+
+	return current;
 }
 
 } // end namespace cg

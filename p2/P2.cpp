@@ -26,7 +26,19 @@ P2::buildScene()
   // **Begin initialization of temporary attributes
   // It should be replaced by your scene initialization
   {
-    auto o = new SceneObject{"Main Camera", *_scene};
+    
+    SceneObject *obj = new SceneObject{ "Main Camera", *_scene };
+    auto camera = new Camera;
+    obj->setParent(_scene->root());
+    _scene->append(obj);
+
+    obj = new SceneObject{ "Box", *_scene };
+    obj->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+    obj->setParent(_scene->root());
+    _scene->append(obj);
+
+
+    /*auto o = new SceneObject{"Main Camera", *_scene};
     auto camera = new Camera;
 
     o->addComponent(camera);
@@ -35,7 +47,7 @@ P2::buildScene()
     o = new SceneObject{"Box 1", *_scene};
     o->addComponent(makePrimitive(_defaultMeshes.find("Box")));
     o->setParent(_scene->root());
-    _objects.push_back(o);
+    _objects.push_back(o);*/
     Camera::setCurrent(camera);
   }
   // **End initialization of temporary attributes
@@ -95,16 +107,21 @@ P2::hierarchyWindow()
 
   // **Begin hierarchy of temporary scene objects
   // It should be replaced by your hierarchy
-  auto f = ImGuiTreeNodeFlags_OpenOnArrow;
+  ImGuiTreeNodeFlags flag{ ImGuiTreeNodeFlags_OpenOnArrow };
   auto open = ImGui::TreeNodeEx(_scene,
-    _current == _scene ? f | ImGuiTreeNodeFlags_Selected : f,
+    _current == _scene ? flag | ImGuiTreeNodeFlags_Selected : flag,
     _scene->name());
 
   if (ImGui::IsItemClicked())
     _current = _scene;
   if (open)
   {
-    for (const auto& o : _objects)
+    std::list <Reference<SceneObject>> aux = _scene->getroot();
+    for (const auto&obj : aux)
+    {
+        _current = obj->display(flag, _current);
+    }
+    /*for (const auto& o : _objects)
     {
       auto f = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
@@ -113,7 +130,7 @@ P2::hierarchyWindow()
         o->name());
       if (ImGui::IsItemClicked())
         _current = o;
-    }
+    }*/
     ImGui::TreePop();
   }
   // **End hierarchy of temporary scene objects
@@ -608,6 +625,35 @@ P2::renderScene()
   }
 }
 
+void
+P2::renderObjects(SceneObject* obj)
+{
+    if (!obj->visible)
+        return;
+
+    auto component = obj->component();
+
+    if (auto p = dynamic_cast<Primitive*>(component))
+        drawPrimitive(*p);
+    else if (auto c = dynamic_cast<Camera*>(component))
+        drawCamera(*c);
+    if (obj == _current)
+    {
+        auto t = obj->transform();
+        _editor->drawAxes(t->position(), mat3f{ t->rotation() });
+    }
+
+    /*if (obj->hasChildren())
+    {
+        auto children = obj->children();
+
+        for (const auto& child : children)
+        {
+            renderObjects(child);
+        }
+    }*/
+}
+
 constexpr auto CAMERA_RES = 0.01f;
 constexpr auto ZOOM_SCALE = 1.01f;
 
@@ -649,7 +695,13 @@ P2::render()
   _program.setUniformMat4("vpMatrix", vp);
   _program.setUniformVec4("ambientLight", _scene->ambientLight);
   _program.setUniformVec3("lightPosition", p);
-  for (const auto& o : _objects)
+
+  for (const auto& obj : _scene->getroot())
+  {
+      renderObjects(obj);
+  }
+
+  /*for (const auto& o : _objects)
   {
     if (!o->visible)
       continue;
@@ -665,7 +717,7 @@ P2::render()
       auto t = o->transform();
       _editor->drawAxes(t->position(), mat3f{t->rotation()});
     }
-  }
+  }*/
   // **End rendering of temporary scene objects
 }
 

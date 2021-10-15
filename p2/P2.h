@@ -106,6 +106,9 @@ private:
 
   static void buildDefaultMeshes();
 
+  /* */
+  void renderObjects(SceneObject* obj);
+
 }; // P2
 
 #endif // __P2_h

@@ -62,6 +62,11 @@ public:
     return _sceneObject;
   }
 
+  /* */
+  Component* get() {
+      return this;
+  }
+
   /// Returns the transform of this component.
   Transform* transform(); // implemented in SceneObject.h
 

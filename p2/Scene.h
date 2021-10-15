@@ -35,6 +35,7 @@
 
 #include "SceneObject.h"
 #include "graphics/Color.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -69,8 +70,22 @@ public:
     return &_root;
   }
 
+  /* */
+  void append(Reference<SceneObject> ob) {
+      __root.push_back(ob);
+  }
+  
+  void remove(Reference<SceneObject> ob) {
+      __root.remove(ob);
+  }
+
+  std::list <Reference<SceneObject>> getroot() {
+      return __root;
+  }
+
 private:
   SceneObject _root;
+  std::list <Reference<SceneObject>> __root;
 
 }; // Scene
 
