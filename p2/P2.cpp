@@ -27,8 +27,9 @@ P2::buildScene()
   // It should be replaced by your scene initialization
   {
     
-    SceneObject *obj = new SceneObject{ "Main Camera", *_scene };
     auto camera = new Camera;
+    SceneObject *obj = new SceneObject{ "Main Camera", *_scene };
+    obj->addComponent(camera);
     obj->setParent(_scene->root());
     _scene->append(obj);
 
@@ -37,17 +38,6 @@ P2::buildScene()
     obj->setParent(_scene->root());
     _scene->append(obj);
 
-
-    /*auto o = new SceneObject{"Main Camera", *_scene};
-    auto camera = new Camera;
-
-    o->addComponent(camera);
-    o->setParent(_scene->root());
-    _objects.push_back(o);
-    o = new SceneObject{"Box 1", *_scene};
-    o->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-    o->setParent(_scene->root());
-    _objects.push_back(o);*/
     Camera::setCurrent(camera);
   }
   // **End initialization of temporary attributes
@@ -121,16 +111,6 @@ P2::hierarchyWindow()
     {
         _current = obj->display(flag, _current);
     }
-    /*for (const auto& o : _objects)
-    {
-      auto f = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-      ImGui::TreeNodeEx(o,
-        _current == o ? f | ImGuiTreeNodeFlags_Selected : f,
-        o->name());
-      if (ImGui::IsItemClicked())
-        _current = o;
-    }*/
     ImGui::TreePop();
   }
   // **End hierarchy of temporary scene objects
@@ -608,9 +588,80 @@ P2::drawPrimitive(Primitive& primitive)
 }
 
 inline void
-P2::drawCamera(Camera& camera)
+P2::drawCamera(Camera& cam)
 {
   // TODO
+    constexpr auto scale = .6f;
+
+    auto height_on = [&](float z) -> float
+    {
+        return 2.f * z * tan(math::toRadians(cam.viewAngle() / 2.f));
+    };
+
+    auto distance = (
+        _editor->camera()->transform()->position()
+        - cam.transform()->position()
+        ).length();
+
+    auto z_near = cam.z_near();
+    auto z_far = std::min(
+        cam.z_far(),
+        std::max(0.f,
+            scale * _editor->camera()->z_far() - distance));
+
+    float h_near = 0;
+    float h_far = 0;
+
+    switch (cam.projectionType())
+    {
+    case Camera::Parallel:
+        h_far = h_near = cam.height();
+        break;
+    case Camera::Perspective:
+        h_near = height_on(z_near);
+        h_far = height_on(z_far);
+        break;
+    }
+
+    auto j = .5f;
+    auto i = j * cam.aspectRatio();
+
+    auto t = j;    // top
+    auto b = -j;    // bottom
+    auto l = -i;    // left
+    auto r = i;    // right
+
+    auto to_world = cam.cameraToWorldMatrix();
+
+    vec3f p[8] =
+    {
+        vec3f(vec2f(l, b) * h_near, -z_near),
+        vec3f(vec2f(r, b) * h_near, -z_near),
+        vec3f(vec2f(l, t) * h_near, -z_near),
+        vec3f(vec2f(r, t) * h_near, -z_near),
+        vec3f(vec2f(l, b) * h_far, -z_far),
+        vec3f(vec2f(r, b) * h_far, -z_far),
+        vec3f(vec2f(l, t) * h_far, -z_far),
+        vec3f(vec2f(r, t) * h_far, -z_far),
+    };
+
+    for (auto& e : p)
+        e = to_world.transform3x4(e);
+
+    _editor->drawLine(p[0], p[1]);
+    _editor->drawLine(p[1], p[3]);
+    _editor->drawLine(p[3], p[2]);
+    _editor->drawLine(p[2], p[0]);
+
+    _editor->drawLine(p[4], p[5]);
+    _editor->drawLine(p[5], p[7]);
+    _editor->drawLine(p[7], p[6]);
+    _editor->drawLine(p[6], p[4]);
+
+    _editor->drawLine(p[0], p[4]);
+    _editor->drawLine(p[1], p[5]);
+    _editor->drawLine(p[2], p[6]);
+    _editor->drawLine(p[3], p[7]);
 }
 
 inline void
@@ -625,6 +676,29 @@ P2::renderScene()
   }
 }
 
+static void
+mantain_aspect(ImGuiSizeCallbackData* data)
+{
+    auto c = static_cast<Camera*>(data->UserData);
+    data->DesiredSize.x = round(c->aspectRatio() * data->DesiredSize.y);
+}
+
+void
+P2::preview(Camera& c) {
+
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, width() / 4, height() / 4);
+    glViewport(0, 0, width() / 4, height() / 4);
+
+    _renderer->setCamera(&c);
+    _renderer->setImageSize(width(), height());
+    _renderer->render();
+    _program.use();
+
+    glViewport(0, 0, width(), height());
+    glDisable(GL_SCISSOR_TEST);
+}
+
 void
 P2::renderObjects(SceneObject* obj)
 {
@@ -637,13 +711,14 @@ P2::renderObjects(SceneObject* obj)
         drawPrimitive(*p);
     else if (auto c = dynamic_cast<Camera*>(component))
         drawCamera(*c);
+
     if (obj == _current)
     {
         auto t = obj->transform();
         _editor->drawAxes(t->position(), mat3f{ t->rotation() });
     }
 
-    /*if (obj->hasChildren())
+    if (obj->hasChildren())
     {
         auto children = obj->children();
 
@@ -651,7 +726,7 @@ P2::renderObjects(SceneObject* obj)
         {
             renderObjects(child);
         }
-    }*/
+    }
 }
 
 constexpr auto CAMERA_RES = 0.01f;
@@ -701,23 +776,18 @@ P2::render()
       renderObjects(obj);
   }
 
-  /*for (const auto& o : _objects)
+  if (auto obj = dynamic_cast<SceneObject*>(_current))
   {
-    if (!o->visible)
-      continue;
+      Camera* camera = nullptr;
+      auto component = obj->component();
 
-    auto component = o->component();
+      if (auto c = dynamic_cast<Camera*>(component))
+          camera = c;
 
-    if (auto p = dynamic_cast<Primitive*>(component))
-      drawPrimitive(*p);
-    else if (auto c = dynamic_cast<Camera*>(component))
-      drawCamera(*c);
-    if (o == _current)
-    {
-      auto t = o->transform();
-      _editor->drawAxes(t->position(), mat3f{t->rotation()});
-    }
-  }*/
+      if (camera)
+          preview(*camera);
+  }
+
   // **End rendering of temporary scene objects
 }
 

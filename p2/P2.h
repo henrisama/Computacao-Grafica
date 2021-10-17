@@ -108,6 +108,10 @@ private:
 
   /* */
   void renderObjects(SceneObject* obj);
+  void preview(Camera& c);
+
+  GLuint _fbo = 0;
+  GLuint _tex[2] = { 0 };
 
 }; // P2
 

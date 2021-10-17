@@ -34,6 +34,8 @@
 #define __GLRenderer_h
 
 #include "Renderer.h"
+#include "Primitive.h"
+#include "graphics/Application.h"
 #include "graphics/GLGraphics3.h"
 
 namespace cg
@@ -48,13 +50,19 @@ class GLRenderer: public Renderer
 {
 public:
   GLRenderer(Scene& scene, Camera* camera = nullptr):
-    Renderer{scene, camera}
+    Renderer{scene, camera}, _program{"Renderer"}
   {
     // TODO
+       Application::loadShaders(_program, "shaders/p2.vs", "shaders/p2.fs");
   }
 
   void update() override;
   void render() override;
+
+private:
+    GLSL::Program _program;
+
+    void drawPrimitive(Primitive&);
 
 }; // GLRenderer
 

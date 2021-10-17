@@ -50,11 +50,53 @@ GLRenderer::update()
 void
 GLRenderer::render()
 {
+    _program.use();
+
   const auto& bc = _scene->backgroundColor;
 
   glClearColor(bc.r, bc.g, bc.b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   // TODO
+
+  const auto& p = _camera->transform()->position();
+  auto vp = vpMatrix(_camera);
+
+  _program.setUniformMat4("vpMatrix", vp);
+  _program.setUniformVec4("ambientLight", _scene->ambientLight);
+  _program.setUniformVec3("lightPosition", p);
+
+  // Draw all visible primitives
+  for (const auto& obj: _scene->getroot())
+  {
+      auto component = obj->component();
+
+      if (auto p = dynamic_cast<Primitive*>(component))
+      {
+          drawPrimitive(*p);
+      }
+  }
 }
+
+inline void
+GLRenderer::drawPrimitive(Primitive& p)
+{
+    auto m = glMesh(p.mesh());
+
+    if (nullptr == m)
+        return;
+
+    auto t = p.transform();
+    auto normalMatrix = mat3f{ t->worldToLocalMatrix() }.transposed();
+
+    _program.setUniformMat4("transform", t->localToWorldMatrix());
+    _program.setUniformMat3("normalMatrix", normalMatrix);
+    _program.setUniformVec4("color", p.color);
+    _program.setUniform("flatMode", (int)0);
+    m->bind();
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
+}
+
 
 } // end namespace cg

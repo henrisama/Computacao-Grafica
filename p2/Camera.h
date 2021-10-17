@@ -76,6 +76,9 @@ public:
   void setClippingPlanes(float F, float B);
   void setProjectionType(ProjectionType projectionType);
 
+  float z_near() const;
+  float z_far() const;
+
   mat4f worldToCameraMatrix() const;
   mat4f cameraToWorldMatrix() const;
   mat4f projectionMatrix() const;
@@ -136,7 +139,7 @@ Camera::clippingPlanes(float& F, float& B) const
 inline Camera::ProjectionType
 Camera::projectionType() const
 {
-  return _projectionType;
+    return _projectionType;
 }
 
 inline mat4f
@@ -166,6 +169,18 @@ inline auto
 vpMatrix(const Camera* c)
 {
   return c->projectionMatrix() * c->worldToCameraMatrix();
+}
+
+inline float
+Camera::z_near() const
+{
+    return _F;
+}
+
+inline float
+Camera::z_far() const
+{
+    return _B;
 }
 
 } // end namespace cg
