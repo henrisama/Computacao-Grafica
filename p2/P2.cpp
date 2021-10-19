@@ -28,13 +28,18 @@ P2::buildScene()
   {
     
     auto camera = new Camera;
-    SceneObject *obj = new SceneObject{ "Main Camera", *_scene };
+    SceneObject *obj = new SceneObject{ "Camera 1", *_scene };
     obj->addComponent(camera);
     obj->setParent(_scene->root());
     _scene->append(obj);
 
-    obj = new SceneObject{ "Box", *_scene };
+    obj = new SceneObject{ "Box 1", *_scene };
     obj->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+    obj->setParent(_scene->root());
+    _scene->append(obj);
+
+    obj = new SceneObject{ "Sphere 1", *_scene };
+    obj->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
     obj->setParent(_scene->root());
     _scene->append(obj);
 
@@ -74,25 +79,151 @@ P2::hierarchyWindow()
     if (ImGui::MenuItem("Empty Object"))
     {
       // TODO: create an empty object.
+        std::string name = "";
+        name
+            .append("Object ")
+            .append(std::to_string(objectCount++));
+
+        if (_current != _scene)
+        {
+            SceneObject* ob = (SceneObject*)_current;
+            _newObject = new SceneObject{ name.c_str(), *_scene };
+            _newObject->setParent(ob);
+            ob->append(_newObject);
+        }
+        else 
+        {
+            Scene* ob = (Scene*)_current;
+            _newObject = new SceneObject{ name.c_str(), *_scene };
+            _newObject->setParent(ob->root());
+            ob->append(_newObject);
+        }
     }
     if (ImGui::BeginMenu("3D Object"))
     {
       if (ImGui::MenuItem("Box"))
       {
         // TODO: create a new box.
+          std::string name = "";
+
+          if (_current != _scene) 
+          {
+              SceneObject* ob = (SceneObject*)_current;
+
+              auto component = ob->component();
+              if (!dynamic_cast<Camera*>(component))
+              {
+                  name
+                      .append("Box ")
+                      .append(std::to_string(boxCount++));
+
+                  _newObject = new SceneObject{ name.c_str(), *_scene };
+                  _newObject->setParent(ob);
+                  _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+                  ob->append(_newObject);
+              }
+          }
+          else 
+          {
+              name
+                  .append("Box ")
+                  .append(std::to_string(boxCount++));
+
+              Scene* ob = (Scene*)_current;
+              _newObject = new SceneObject{ name.c_str(), *_scene };
+              _newObject->setParent(ob->root());
+              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+              ob->append(_newObject);
+          }
       }
       if (ImGui::MenuItem("Sphere"))
       {
         // TODO: create a new sphere.
+          std::string name = "";
+
+          if (_current != _scene) {
+              SceneObject* ob = (SceneObject*)_current;
+
+              auto component = ob->component();
+              if (!dynamic_cast<Camera*>(component)) 
+              {
+                  name
+                      .append("Sphere ")
+                      .append(std::to_string(sphereCount++));
+
+                  _newObject = new SceneObject{ name.c_str(), *_scene };
+                  _newObject->setParent(ob);
+                  _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
+                  ob->append(_newObject);
+              }
+          }
+          else 
+          {
+              name
+                  .append("Box ")
+                  .append(std::to_string(boxCount++));
+              Scene* ob = (Scene*)_current;
+              _newObject = new SceneObject{ name.c_str(), *_scene };
+              _newObject->setParent(ob->root());
+              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
+              ob->append(_newObject);
+          }
       }
       ImGui::EndMenu();
     }
     if (ImGui::MenuItem("Camera"))
     {
       // TODO: create a new camera.
+        std::string name = "";
+
+        if (_current != _scene) {
+            SceneObject* ob = (SceneObject*)_current;
+
+            auto component = ob->component();
+            if (!dynamic_cast<Camera*>(component))
+            {
+                name
+                    .append("Camera ")
+                    .append(std::to_string(cameraCount++));
+
+                auto camera = new Camera;
+                _newObject = new SceneObject{ name.c_str(), *_scene };
+                _newObject->setParent(ob);
+                _newObject->addComponent(camera);
+                ob->append(_newObject);
+            }
+        }
+        else 
+        {
+            name
+                .append("Camera ")
+                .append(std::to_string(cameraCount++));
+
+            Scene* ob = (Scene*)_current;
+            auto camera = new Camera;
+            _newObject = new SceneObject{ name.c_str(), *_scene };
+            _newObject->addComponent(camera);
+            _newObject->setParent(_scene->root());
+            ob->append(_newObject);
+        }
     }
     ImGui::EndPopup();
   }
+
+  if (ImGui::Button("Delete")) {
+      if (_current != _scene) {
+          SceneObject* ob = (SceneObject*)_current;
+          if (ob->parent() != _scene->root()) {
+              _current = ob->parent();
+              ob->deleteIt();
+          }
+          else {
+              _current = _scene;
+              _scene->remove(ob);
+          }
+      }
+  }
+
   ImGui::Separator();
 
   // **Begin hierarchy of temporary scene objects
@@ -395,6 +526,13 @@ P2::editorViewGui()
   inspectCamera(*_editor->camera());
   ImGui::Separator();
   ImGui::Checkbox("Show Ground", &_editor->showGround);
+
+  if (ImGui::Button("Focus")) {
+      auto cam = _editor->camera()->current();
+      SceneObject* ob = (SceneObject*)_current;
+      cam->transform()->setLocalPosition(ob->transform()->localPosition());
+      cam->transform()->setLocalRotation(ob->transform()->localRotation());
+  }
 }
 
 inline void

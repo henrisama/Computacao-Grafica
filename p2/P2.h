@@ -110,8 +110,12 @@ private:
   void renderObjects(SceneObject* obj);
   void preview(Camera& c);
 
-  GLuint _fbo = 0;
-  GLuint _tex[2] = { 0 };
+  Reference<SceneObject> _newObject;
+  int boxCount = 2;
+  int objectCount = 2;
+  int sphereCount = 2;
+  int cameraCount = 2;
+
 
 }; // P2
 

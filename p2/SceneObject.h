@@ -150,6 +150,8 @@ public:
   /* Implementado no SceneObject.cpp */
   SceneNode* display(ImGuiTreeNodeFlags flag, SceneNode* current);
 
+  void deleteIt();
+
 private:
   Scene* _scene;
   SceneObject* _parent;

@@ -56,6 +56,19 @@ SceneObject::setParent(SceneObject* parent)
 	_parent = parent;
 }
 
+void
+SceneObject::deleteIt() {
+	if (this->hasChildren()) 
+	{
+		for (const auto& child : this->children())
+		{
+			child->deleteIt();
+		}
+	}
+	_parent->remove(this);
+	delete(this);
+}
+
 SceneNode*
 SceneObject::display(ImGuiTreeNodeFlags flag, SceneNode* current) 
 {
