@@ -1,10 +1,10 @@
 #include "geometry/MeshSweeper.h"
-#include "P2.h"
+#include "P3.h"
 
-MeshMap P2::_defaultMeshes;
+MeshMap P3::_defaultMeshes;
 
 inline void
-P2::buildDefaultMeshes()
+P3::buildDefaultMeshes()
 {
   _defaultMeshes["None"] = nullptr;
   _defaultMeshes["Box"] = GLGraphics3::box();
@@ -14,11 +14,11 @@ P2::buildDefaultMeshes()
 inline Primitive*
 makePrimitive(MeshMapIterator mit)
 {
-  return new Primitive{mit->second, mit->first};
+  return new Primitive(mit->second, mit->first);
 }
 
 inline void
-P2::buildScene()
+P3::buildScene()
 {
   _current = _scene = new Scene{"Scene 1"};
   _editor = new SceneEditor{*_scene};
@@ -26,36 +26,29 @@ P2::buildScene()
   // **Begin initialization of temporary attributes
   // It should be replaced by your scene initialization
   {
-    
+    auto o = new SceneObject{"Main Camera", *_scene};
     auto camera = new Camera;
-    SceneObject *obj = new SceneObject{ "Camera 1", *_scene };
-    obj->addComponent(camera);
-    obj->setParent(_scene->root());
-    _scene->append(obj);
 
-    obj = new SceneObject{ "Box 1", *_scene };
-    obj->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-    obj->setParent(_scene->root());
-    _scene->append(obj);
-
-    obj = new SceneObject{ "Sphere 1", *_scene };
-    obj->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
-    obj->setParent(_scene->root());
-    _scene->append(obj);
-
-    obj = new SceneObject{ "Object 1", *_scene };
-    obj->setParent(_scene->root());
-    _scene->append(obj);
-
+    o->addComponent(camera);
+    o->setParent(_scene->root());
+    _objects.push_back(o);
+    o = new SceneObject{"Directional Light", *_scene};
+    o->addComponent(new Light);
+    o->setParent(_scene->root());
+    _objects.push_back(o);
+    o = new SceneObject{"Box 1", *_scene};
+    o->addComponent(makePrimitive(_defaultMeshes.find("Box")));
+    o->setParent(_scene->root());
+    _objects.push_back(o);
     Camera::setCurrent(camera);
   }
   // **End initialization of temporary attributes
 }
 
 void
-P2::initialize()
+P3::initialize()
 {
-  Application::loadShaders(_program, "shaders/p2.vs", "shaders/p2.fs");
+  Application::loadShaders(_program, "shaders/p3.vs", "shaders/p3.fs");
   Assets::initialize();
   buildDefaultMeshes();
   buildScene();
@@ -67,13 +60,8 @@ P2::initialize()
   _program.use();
 }
 
-namespace ImGui
-{
-  void ShowDemoWindow(bool*);
-}
-
 inline void
-P2::hierarchyWindow()
+P3::hierarchyWindow()
 {
   ImGui::Begin("Hierarchy");
   if (ImGui::Button("Create###object"))
@@ -83,168 +71,63 @@ P2::hierarchyWindow()
     if (ImGui::MenuItem("Empty Object"))
     {
       // TODO: create an empty object.
-        std::string name = "";
-        name
-            .append("Object ")
-            .append(std::to_string(objectCount++));
-
-        if (_current != _scene)
-        {
-            SceneObject* ob = (SceneObject*)_current;
-            _newObject = new SceneObject{ name.c_str(), *_scene };
-            _newObject->setParent(ob);
-            ob->append(_newObject);
-        }
-        else 
-        {
-            Scene* ob = (Scene*)_current;
-            _newObject = new SceneObject{ name.c_str(), *_scene };
-            _newObject->setParent(ob->root());
-            ob->append(_newObject);
-        }
     }
     if (ImGui::BeginMenu("3D Object"))
     {
       if (ImGui::MenuItem("Box"))
       {
         // TODO: create a new box.
-          std::string name = "";
-
-          if (_current != _scene) 
-          {
-              SceneObject* ob = (SceneObject*)_current;
-
-              auto component = ob->component();
-              if (!dynamic_cast<Camera*>(component))
-              {
-                  name
-                      .append("Box ")
-                      .append(std::to_string(boxCount++));
-
-                  _newObject = new SceneObject{ name.c_str(), *_scene };
-                  _newObject->setParent(ob);
-                  _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-                  ob->append(_newObject);
-              }
-          }
-          else 
-          {
-              name
-                  .append("Box ")
-                  .append(std::to_string(boxCount++));
-
-              Scene* ob = (Scene*)_current;
-              _newObject = new SceneObject{ name.c_str(), *_scene };
-              _newObject->setParent(ob->root());
-              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-              ob->append(_newObject);
-          }
       }
       if (ImGui::MenuItem("Sphere"))
       {
         // TODO: create a new sphere.
-          std::string name = "";
-
-          if (_current != _scene) {
-              SceneObject* ob = (SceneObject*)_current;
-
-              auto component = ob->component();
-              if (!dynamic_cast<Camera*>(component)) 
-              {
-                  name
-                      .append("Sphere ")
-                      .append(std::to_string(sphereCount++));
-
-                  _newObject = new SceneObject{ name.c_str(), *_scene };
-                  _newObject->setParent(ob);
-                  _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
-                  ob->append(_newObject);
-              }
-          }
-          else 
-          {
-              name
-                  .append("Box ")
-                  .append(std::to_string(boxCount++));
-              Scene* ob = (Scene*)_current;
-              _newObject = new SceneObject{ name.c_str(), *_scene };
-              _newObject->setParent(ob->root());
-              _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
-              ob->append(_newObject);
-          }
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Light"))
+    {
+      if (ImGui::MenuItem("Directional Light"))
+      {
+        // TODO: create a new directional light.
+      }
+      if (ImGui::MenuItem("Point Light"))
+      {
+        // TODO: create a new pontual light.
+      }
+      if (ImGui::MenuItem("Spotlight"))
+      {
+        // TODO: create a new spotlight.
       }
       ImGui::EndMenu();
     }
     if (ImGui::MenuItem("Camera"))
     {
       // TODO: create a new camera.
-        std::string name = "";
-
-        if (_current != _scene) {
-            SceneObject* ob = (SceneObject*)_current;
-
-            auto component = ob->component();
-            if (!dynamic_cast<Camera*>(component))
-            {
-                name
-                    .append("Camera ")
-                    .append(std::to_string(cameraCount++));
-
-                auto camera = new Camera;
-                _newObject = new SceneObject{ name.c_str(), *_scene };
-                _newObject->setParent(ob);
-                _newObject->addComponent(camera);
-                ob->append(_newObject);
-            }
-        }
-        else 
-        {
-            name
-                .append("Camera ")
-                .append(std::to_string(cameraCount++));
-
-            Scene* ob = (Scene*)_current;
-            auto camera = new Camera;
-            _newObject = new SceneObject{ name.c_str(), *_scene };
-            _newObject->addComponent(camera);
-            _newObject->setParent(_scene->root());
-            ob->append(_newObject);
-        }
     }
     ImGui::EndPopup();
   }
-
-  if (ImGui::Button("Delete")) {
-      if (_current != _scene) {
-          SceneObject* ob = (SceneObject*)_current;
-          if (ob->parent() != _scene->root()) {
-              _current = ob->parent();
-              ob->deleteIt();
-          }
-          else {
-              _current = _scene;
-              _scene->remove(ob);
-          }
-      }
-  }
-
   ImGui::Separator();
 
   // **Begin hierarchy of temporary scene objects
   // It should be replaced by your hierarchy
-  ImGuiTreeNodeFlags flag{ ImGuiTreeNodeFlags_OpenOnArrow };
+  auto f = ImGuiTreeNodeFlags_OpenOnArrow;
   auto open = ImGui::TreeNodeEx(_scene,
-    _current == _scene ? flag | ImGuiTreeNodeFlags_Selected : flag,
+    _current == _scene ? f | ImGuiTreeNodeFlags_Selected : f,
     _scene->name());
 
   if (ImGui::IsItemClicked())
     _current = _scene;
   if (open)
   {
-    std::list <Reference<SceneObject>> aux = _scene->getroot();
-    for (const auto&obj : aux)
+    for (const auto& o : _objects)
     {
-        _current = obj->display(flag, _current);
+      auto f = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+      ImGui::TreeNodeEx(o,
+        _current == o ? f | ImGuiTreeNodeFlags_Selected : f,
+        o->name());
+      if (ImGui::IsItemClicked())
+        _current = o;
     }
     ImGui::TreePop();
   }
@@ -302,7 +185,7 @@ TransformEdit(Transform* transform)
 } // end namespace ImGui
 
 inline void
-P2::sceneGui()
+P3::sceneGui()
 {
   auto scene = (Scene*)_current;
 
@@ -316,7 +199,7 @@ P2::sceneGui()
 }
 
 inline void
-P2::inspectPrimitive(Primitive& primitive)
+P3::inspectShape(Primitive& primitive)
 {
   char buffer[16];
 
@@ -350,11 +233,53 @@ P2::inspectPrimitive(Primitive& primitive)
         primitive.setMesh(mit->second, mit->first);
     ImGui::EndPopup();
   }
-  ImGui::ColorEdit3("Mesh Color", (float*)&primitive.color);
+}
+
+inline void
+P3::inspectMaterial(Material& material)
+{
+  ImGui::ColorEdit3("Ambient", material.ambient);
+  ImGui::ColorEdit3("Diffuse", material.diffuse);
+  ImGui::ColorEdit3("Spot", material.spot);
+  ImGui::DragFloat("Shine", &material.shine, 1, 0, 1000.0f);
+}
+
+inline void
+P3::inspectPrimitive(Primitive& primitive)
+{
+  //const auto flag = ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+  //if (ImGui::TreeNodeEx("Shape", flag))
+    inspectShape(primitive);
+  //if (ImGui::TreeNodeEx("Material", flag))
+    inspectMaterial(primitive.material);
+}
+
+inline void
+P3::inspectLight(Light& light)
+{
+  static const char* lightTypes[]{"Directional", "Point", "Spot"};
+  auto lt = light.type();
+
+  if (ImGui::BeginCombo("Type", lightTypes[lt]))
+  {
+    for (auto i = 0; i < IM_ARRAYSIZE(lightTypes); ++i)
+    {
+      bool selected = lt == i;
+
+      if (ImGui::Selectable(lightTypes[i], selected))
+        lt = (Light::Type)i;
+      if (selected)
+        ImGui::SetItemDefaultFocus();
+    }
+    ImGui::EndCombo();
+  }
+  light.setType(lt);
+  ImGui::ColorEdit3("Color", light.color);
 }
 
 void
-P2::inspectCamera(Camera& camera)
+P3::inspectCamera(Camera& camera)
 {
   static const char* projectionNames[]{"Perspective", "Orthographic"};
   auto cp = camera.projectionType();
@@ -420,7 +345,7 @@ P2::inspectCamera(Camera& camera)
 }
 
 inline void
-P2::addComponentButton(SceneObject& object)
+P3::addComponentButton(SceneObject& object)
 {
   if (ImGui::Button("Add Component"))
     ImGui::OpenPopup("AddComponentPopup");
@@ -428,28 +353,22 @@ P2::addComponentButton(SceneObject& object)
   {
     if (ImGui::MenuItem("Primitive"))
     {
-        // TODO
-        auto component = object.component();
-        if (dynamic_cast<Transform*>(component))
-        {
-            object.addComponent(makePrimitive(_defaultMeshes.find("Box")));
-        }
+      // TODO
+    }
+    if (ImGui::MenuItem("Light"))
+    {
+      // TODO
     }
     if (ImGui::MenuItem("Camera"))
     {
-        // TODO
-        auto component = object.component();
-        if (dynamic_cast<Transform*>(component))
-        {
-            object.addComponent(new Camera);
-        }
+      // TODO
     }
     ImGui::EndPopup();
   }
 }
 
 inline void
-P2::sceneObjectGui()
+P3::sceneObjectGui()
 {
   auto object = (SceneObject*)_current;
 
@@ -461,7 +380,6 @@ P2::sceneObjectGui()
   ImGui::Separator();
   if (ImGui::CollapsingHeader(object->transform()->typeName()))
     ImGui::TransformEdit(object->transform());
-
   // **Begin inspection of temporary components
   // It should be replaced by your component inspection
   auto component = object->component();
@@ -477,6 +395,18 @@ P2::sceneObjectGui()
     }
     else if (open)
       inspectPrimitive(*p);
+  }
+  else if (auto l = dynamic_cast<Light*>(component))
+  {
+    auto notDelete{true};
+    auto open = ImGui::CollapsingHeader(l->typeName(), &notDelete);
+
+    if (!notDelete)
+    {
+      // TODO: delete light
+    }
+    else if (open)
+      inspectLight(*l);
   }
   else if (auto c = dynamic_cast<Camera*>(component))
   {
@@ -500,7 +430,7 @@ P2::sceneObjectGui()
 }
 
 inline void
-P2::objectGui()
+P3::objectGui()
 {
   if (_current == nullptr)
     return;
@@ -514,7 +444,7 @@ P2::objectGui()
 }
 
 inline void
-P2::inspectorWindow()
+P3::inspectorWindow()
 {
   ImGui::Begin("Inspector");
   objectGui();
@@ -522,7 +452,7 @@ P2::inspectorWindow()
 }
 
 inline void
-P2::editorViewGui()
+P3::editorViewGui()
 {
   if (ImGui::Button("Set Default View"))
     _editor->setDefaultView(float(width()) / float(height()));
@@ -539,21 +469,26 @@ P2::editorViewGui()
     t->setLocalEulerAngles(temp);
   inspectCamera(*_editor->camera());
   ImGui::Separator();
-  ImGui::Checkbox("Show Ground", &_editor->showGround);
+  {
+    static int sm;
 
-  if (ImGui::Button("Focus")) {
-      auto cam = _editor->camera()->current();
-      SceneObject* ob = (SceneObject*)_current;
-      cam->transform()->setLocalPosition(ob->transform()->localPosition());
-      cam->transform()->setLocalRotation(ob->transform()->localRotation());
+    ImGui::Combo("Shading Mode", &sm, "None\0Flat\0Gouraud\0\0");
+    // TODO
+
+    static Color edgeColor;
+    static bool showEdges;
+
+    ImGui::ColorEdit3("Edges", edgeColor);
+    ImGui::SameLine();
+    ImGui::Checkbox("###showEdges", &showEdges);
   }
+  ImGui::Separator();
+  ImGui::Checkbox("Show Ground", &_editor->showGround);
 }
 
 inline void
-P2::assetsWindow()
+P3::assetsWindow()
 {
-  if (!_showAssets)
-    return;
   ImGui::Begin("Assets");
   if (ImGui::CollapsingHeader("Meshes"))
   {
@@ -577,13 +512,13 @@ P2::assetsWindow()
   ImGui::Separator();
   if (ImGui::CollapsingHeader("Textures"))
   {
-    // p3
+    // next semester
   }
   ImGui::End();
 }
 
 inline void
-P2::editorView()
+P3::editorView()
 {
   if (!_showEditorView)
     return;
@@ -593,7 +528,7 @@ P2::editorView()
 }
 
 inline void
-P2::fileMenu()
+P3::fileMenu()
 {
   if (ImGui::MenuItem("New"))
   {
@@ -639,7 +574,7 @@ showStyleSelector(const char* label)
 }
 
 inline void
-P2::showOptions()
+P3::showOptions()
 {
   ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.6f);
   showStyleSelector("Color Theme##Selector");
@@ -648,7 +583,7 @@ P2::showOptions()
 }
 
 inline void
-P2::mainMenu()
+P3::mainMenu()
 {
   if (ImGui::BeginMainMenuBar())
   {
@@ -694,18 +629,13 @@ P2::mainMenu()
 }
 
 void
-P2::gui()
+P3::gui()
 {
   mainMenu();
   hierarchyWindow();
   inspectorWindow();
   assetsWindow();
   editorView();
-
-  /*
-  static bool demo = true;
-  ImGui::ShowDemoWindow(&demo);
-  */
 }
 
 inline void
@@ -716,7 +646,7 @@ drawMesh(GLMesh* mesh, GLuint mode)
 }
 
 inline void
-P2::drawPrimitive(Primitive& primitive)
+P3::drawPrimitive(Primitive& primitive)
 {
   auto m = glMesh(primitive.mesh());
 
@@ -728,7 +658,7 @@ P2::drawPrimitive(Primitive& primitive)
 
   _program.setUniformMat4("transform", t->localToWorldMatrix());
   _program.setUniformMat3("normalMatrix", normalMatrix);
-  _program.setUniformVec4("color", primitive.color);
+  _program.setUniformVec4("color", primitive.material.diffuse);
   _program.setUniform("flatMode", (int)0);
   m->bind();
   drawMesh(m, GL_FILL);
@@ -740,84 +670,19 @@ P2::drawPrimitive(Primitive& primitive)
 }
 
 inline void
-P2::drawCamera(Camera& cam)
+P3::drawLight(Light& light)
 {
   // TODO
-    constexpr auto scale = .6f;
-
-    auto height_on = [&](float z) -> float
-    {
-        return 2.f * z * tan(math::toRadians(cam.viewAngle() / 2.f));
-    };
-
-    auto distance = (
-        _editor->camera()->transform()->position()
-        - cam.transform()->position()
-        ).length();
-
-    auto z_near = cam.z_near();
-    auto z_far = std::min(
-        cam.z_far(),
-        std::max(0.f,
-            scale * _editor->camera()->z_far() - distance));
-
-    float h_near = 0;
-    float h_far = 0;
-
-    switch (cam.projectionType())
-    {
-    case Camera::Parallel:
-        h_far = h_near = cam.height();
-        break;
-    case Camera::Perspective:
-        h_near = height_on(z_near);
-        h_far = height_on(z_far);
-        break;
-    }
-
-    auto j = .5f;
-    auto i = j * cam.aspectRatio();
-
-    auto t = j;    // top
-    auto b = -j;    // bottom
-    auto l = -i;    // left
-    auto r = i;    // right
-
-    auto to_world = cam.cameraToWorldMatrix();
-
-    vec3f p[8] =
-    {
-        vec3f(vec2f(l, b) * h_near, -z_near),
-        vec3f(vec2f(r, b) * h_near, -z_near),
-        vec3f(vec2f(l, t) * h_near, -z_near),
-        vec3f(vec2f(r, t) * h_near, -z_near),
-        vec3f(vec2f(l, b) * h_far, -z_far),
-        vec3f(vec2f(r, b) * h_far, -z_far),
-        vec3f(vec2f(l, t) * h_far, -z_far),
-        vec3f(vec2f(r, t) * h_far, -z_far),
-    };
-
-    for (auto& e : p)
-        e = to_world.transform3x4(e);
-
-    _editor->drawLine(p[0], p[1]);
-    _editor->drawLine(p[1], p[3]);
-    _editor->drawLine(p[3], p[2]);
-    _editor->drawLine(p[2], p[0]);
-
-    _editor->drawLine(p[4], p[5]);
-    _editor->drawLine(p[5], p[7]);
-    _editor->drawLine(p[7], p[6]);
-    _editor->drawLine(p[6], p[4]);
-
-    _editor->drawLine(p[0], p[4]);
-    _editor->drawLine(p[1], p[5]);
-    _editor->drawLine(p[2], p[6]);
-    _editor->drawLine(p[3], p[7]);
 }
 
 inline void
-P2::renderScene()
+P3::drawCamera(Camera& camera)
+{
+  // TODO
+}
+
+inline void
+P3::renderScene()
 {
   if (auto camera = Camera::current())
   {
@@ -828,64 +693,11 @@ P2::renderScene()
   }
 }
 
-static void
-mantain_aspect(ImGuiSizeCallbackData* data)
-{
-    auto c = static_cast<Camera*>(data->UserData);
-    data->DesiredSize.x = round(c->aspectRatio() * data->DesiredSize.y);
-}
-
-void
-P2::preview(Camera& c) {
-
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(0, 0, width() / 4, height() / 4);
-    glViewport(0, 0, width() / 4, height() / 4);
-
-    _renderer->setCamera(&c);
-    _renderer->setImageSize(width(), height());
-    _renderer->render();
-    _program.use();
-
-    glViewport(0, 0, width(), height());
-    glDisable(GL_SCISSOR_TEST);
-}
-
-void
-P2::renderObjects(SceneObject* obj)
-{
-    if (!obj->visible)
-        return;
-
-    auto component = obj->component();
-
-    if (auto p = dynamic_cast<Primitive*>(component))
-        drawPrimitive(*p);
-    else if (auto c = dynamic_cast<Camera*>(component))
-        drawCamera(*c);
-
-    if (obj == _current)
-    {
-        auto t = obj->transform();
-        _editor->drawAxes(t->position(), mat3f{ t->rotation() });
-    }
-
-    if (obj->hasChildren())
-    {
-        auto children = obj->children();
-
-        for (const auto& child : children)
-        {
-            renderObjects(child);
-        }
-    }
-}
-
 constexpr auto CAMERA_RES = 0.01f;
 constexpr auto ZOOM_SCALE = 1.01f;
 
 void
-P2::render()
+P3::render()
 {
   if (_viewMode == ViewMode::Renderer)
   {
@@ -922,36 +734,35 @@ P2::render()
   _program.setUniformMat4("vpMatrix", vp);
   _program.setUniformVec4("ambientLight", _scene->ambientLight);
   _program.setUniformVec3("lightPosition", p);
-
-  for (const auto& obj : _scene->getroot())
+  for (const auto& o : _objects)
   {
-      renderObjects(obj);
+    if (!o->visible)
+      continue;
+
+    auto component = o->component();
+
+    if (auto p = dynamic_cast<Primitive*>(component))
+      drawPrimitive(*p);
+    else if (auto c = dynamic_cast<Camera*>(component))
+      drawCamera(*c);
+    if (o == _current)
+    {
+      auto t = o->transform();
+      _editor->drawAxes(t->position(), mat3f{t->rotation()});
+    }
   }
-
-  if (auto obj = dynamic_cast<SceneObject*>(_current))
-  {
-      Camera* camera = nullptr;
-      auto component = obj->component();
-
-      if (auto c = dynamic_cast<Camera*>(component))
-          camera = c;
-
-      if (camera)
-          preview(*camera);
-  }
-
   // **End rendering of temporary scene objects
 }
 
 bool
-P2::windowResizeEvent(int width, int height)
+P3::windowResizeEvent(int width, int height)
 {
   _editor->camera()->setAspectRatio(float(width) / float(height));
   return true;
 }
 
 bool
-P2::keyInputEvent(int key, int action, int mods)
+P3::keyInputEvent(int key, int action, int mods)
 {
   auto active = action != GLFW_RELEASE && mods == GLFW_MOD_ALT;
 
@@ -972,7 +783,7 @@ P2::keyInputEvent(int key, int action, int mods)
     case GLFW_KEY_Q:
       _moveFlags.enable(MoveBits::Up, active);
       break;
-    case GLFW_KEY_E:
+    case GLFW_KEY_Z:
       _moveFlags.enable(MoveBits::Down, active);
       break;
   }
@@ -980,18 +791,18 @@ P2::keyInputEvent(int key, int action, int mods)
 }
 
 bool
-P2::scrollEvent(double, double yOffset)
+P3::scrollEvent(double, double yOffset)
 {
-  if (ImGui::GetIO().WantCaptureMouse || _viewMode == ViewMode::Renderer)
+  if (ImGui::GetIO().WantCaptureMouse)
     return false;
   _editor->zoom(yOffset < 0 ? 1.0f / ZOOM_SCALE : ZOOM_SCALE);
   return true;
 }
 
 bool
-P2::mouseButtonInputEvent(int button, int actions, int mods)
+P3::mouseButtonInputEvent(int button, int actions, int mods)
 {
-  if (ImGui::GetIO().WantCaptureMouse || _viewMode == ViewMode::Renderer)
+  if (ImGui::GetIO().WantCaptureMouse)
     return false;
   (void)mods;
 
@@ -1007,7 +818,7 @@ P2::mouseButtonInputEvent(int button, int actions, int mods)
 }
 
 bool
-P2::mouseMoveEvent(double xPos, double yPos)
+P3::mouseMoveEvent(double xPos, double yPos)
 {
   if (!_dragFlags)
     return false;
