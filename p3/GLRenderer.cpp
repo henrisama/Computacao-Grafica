@@ -41,20 +41,20 @@ namespace cg
 // GLRenderer implementation
 // ==========
 void
-GLRenderer::update()
+	GLRenderer::update()
 {
-  Renderer::update();
-  // TODO
+	Renderer::update();
+	// TODO
 }
 
 void
-GLRenderer::render()
+	GLRenderer::render()
 {
-  const auto& bc = _scene->backgroundColor;
+	const auto& bc = _scene->backgroundColor;
 
-  glClearColor(bc.r, bc.g, bc.b, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // TODO
+	glClearColor(bc.r, bc.g, bc.b, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// TODO
 }
 
 } // end namespace cg

@@ -82,6 +82,9 @@ public:
 
   void reset(float aspect = 1);
 
+  float z_near() const;
+  float z_far() const;
+
   static Camera* current()
   {
     return _current;
@@ -166,6 +169,18 @@ inline auto
 vpMatrix(const Camera* c)
 {
   return c->projectionMatrix() * c->worldToCameraMatrix();
+}
+
+inline float
+Camera::z_near() const
+{
+    return _F;
+}
+
+inline float
+Camera::z_far() const
+{
+    return _B;
 }
 
 } // end namespace cg

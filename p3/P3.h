@@ -58,11 +58,14 @@ private:
   Reference<Scene> _scene;
   Reference<SceneEditor> _editor;
   Reference<GLRenderer> _renderer;
-  // **Begin temporary attributes
-  // Those are just to show some geometry
-  // They should be replaced by your scene hierarchy
+
   std::vector<Reference<SceneObject>> _objects;
-  // **End temporary attributes
+  Reference<SceneObject> _newObject;
+  int boxCount = 2;
+  int objectCount = 2;
+  int sphereCount = 2;
+  int cameraCount = 2;
+
   SceneNode* _current{};
   Color _selectedWireframeColor{255, 102, 0};
   Flags<MoveBits> _moveFlags{};
@@ -110,6 +113,9 @@ private:
   bool mouseMoveEvent(double, double) override;
 
   static void buildDefaultMeshes();
+
+  void renderObjects(SceneObject* obj);
+  void preview(Camera& c);
 
 }; // P3
 

@@ -69,6 +69,7 @@ public:
     return &_root;
   }
 
+
 private:
   SceneObject _root;
 

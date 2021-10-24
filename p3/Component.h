@@ -50,6 +50,12 @@ class Transform;
 class Component: public SharedObject
 {
 public:
+  /// Returns component
+  Component* get()
+  {
+      return this;
+  }
+
   /// Returns the type name of this component.
   auto typeName() const
   {
@@ -64,6 +70,7 @@ public:
 
   /// Returns the transform of this component.
   Transform* transform(); // implemented in SceneObject.h
+
 
 protected:
   Component(const char* const typeName):

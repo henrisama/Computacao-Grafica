@@ -44,19 +44,19 @@ namespace cg
 //
 // GLRenderer: OpenGL renderer class
 // ==========
-class GLRenderer: public Renderer
-{
-public:
-  GLRenderer(Scene& scene, Camera* camera = nullptr):
-    Renderer{scene, camera}
-  {
-    // TODO
-  }
+    class GLRenderer : public Renderer
+    {
+    public:
+        GLRenderer(Scene& scene, Camera* camera = nullptr) :
+            Renderer{ scene, camera }
+        {
+            // TODO
+        }
 
-  void update() override;
-  void render() override;
+        void update() override;
+        void render() override;
 
-}; // GLRenderer
+    }; // GLRenderer
 
 } // end namespace cg
 

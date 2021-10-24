@@ -32,9 +32,14 @@
 
 #ifndef __SceneObject_h
 #define __SceneObject_h
+#define ListObj std::list <Reference<SceneObject>>
+#define ListCpn std::list <Reference<Component>>
 
 #include "SceneNode.h"
 #include "Transform.h"
+#include "Primitive.h"
+#include "imgui.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
@@ -58,7 +63,7 @@ public:
     _scene{&scene},
     _parent{}
   {
-    addComponent(makeUse(&_transform));    
+    addComponent(makeUse(new Transform));    
   }
 
   /// Returns the scene which this scene object belong to.
@@ -76,40 +81,42 @@ public:
   /// Sets the parent of this scene object.
   void setParent(SceneObject* parent);
 
+  /// add scene object to the list of children
+  void append(Reference<SceneObject> ob);
+
+  /// remove scene object to the list of children
+  void remove(Reference<SceneObject> ob);
+
+  /// delete this scene object
+  void deleteIt();
+
+  /// check if the scene object has children
+  bool hasChildren();
+
+  /// returns children of this scene object
+  ListObj children();
+
+  /// display scene objects on GUI
+  SceneNode* display(ImGuiTreeNodeFlags flag, SceneNode* current);
+
   /// Returns the transform of this scene object.
-  auto transform() const
-  {
-    return &_transform;
-  }
+  Transform* transform();
+  Transform* transform() const;
 
-  auto transform()
-  {
-    return &_transform;
-  }
+  /// add component to the list of components  
+  void addComponent(Component* component);
 
-  void addComponent(Component* component)
-  {
-    component->_sceneObject = this;
-    // TODO
-    _component = Component::makeUse(component); // temporary
-  }
 
-  // **Begin temporary methods
-  // They should be replace by your child and component iterators
-  Component* component()
-  {
-    return _component;
-  }
-  // **End temporary methods
+  /// returns componet of this scene object
+  Component* component();
 
 private:
   Scene* _scene;
   SceneObject* _parent;
-  Transform _transform;
-  // **Begin temporary attributes
-  // They should be replace by your child and component collections
-  Reference<Component> _component;
-  // **End temporary attributes
+
+  ListObj _children;
+  ListCpn _components;
+  ListCpn::iterator _cit;
 
   friend class Scene;
 

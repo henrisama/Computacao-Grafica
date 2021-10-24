@@ -102,11 +102,6 @@ public:
   }
 
   /* */
-  void delComponent(Component* component)
-  {
-      _components.remove(component);
-  }
-
   // **Begin temporary methods
   // They should be replace by your child and component iterators
   Component* component()

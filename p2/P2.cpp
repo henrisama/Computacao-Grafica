@@ -828,13 +828,6 @@ P2::renderScene()
   }
 }
 
-static void
-mantain_aspect(ImGuiSizeCallbackData* data)
-{
-    auto c = static_cast<Camera*>(data->UserData);
-    data->DesiredSize.x = round(c->aspectRatio() * data->DesiredSize.y);
-}
-
 void
 P2::preview(Camera& c) {
 

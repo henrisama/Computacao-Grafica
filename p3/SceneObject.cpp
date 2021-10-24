@@ -31,6 +31,7 @@
 // Last revision: 07/09/2019
 
 #include "SceneObject.h"
+#include "Scene.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,8 +44,124 @@ namespace cg
 void
 SceneObject::setParent(SceneObject* parent)
 {
-  // TODO
-  _parent = parent;
+	/*if (_parent == nullptr) {
+		/// current scene needs to remove object from object list
+		_scene->root()->remove(this);
+	}
+	else {
+		/// current parent needs to remove object from object list
+		_parent->remove(this);
+	}*/
+	_parent = parent;
+}
+
+void
+SceneObject::append(Reference<SceneObject> ob)
+{
+	_children.push_back(ob);
+}
+
+void
+SceneObject::remove(Reference<SceneObject> ob)
+{
+	_children.remove(ob);
+}
+
+void
+SceneObject::deleteIt() {
+	if (this->hasChildren())
+	{
+		_children.clear();
+	}
+	_parent->remove(this);
+}
+
+void
+SceneObject::addComponent(Component* component)
+{
+	if (_components.size() == 2)
+		return;
+
+	component->_sceneObject = this;
+	_components.push_back(Component::makeUse(component));
+}
+
+bool 
+SceneObject::hasChildren()
+{
+	if (_children.size() > 0)
+		return true;
+	return false;
+}
+
+ListObj
+SceneObject::children()
+{
+	return _children;
+}
+
+Transform*
+SceneObject::transform() const
+{
+	return (Transform*)(*_components.begin())->get();
+}
+
+Transform*
+SceneObject::transform()
+{
+	return (Transform*)(*_components.begin())->get();
+}
+
+Component*
+SceneObject::component()
+{
+	//return _component;
+
+	if (_components.size() == 2)
+	{
+		return (Component*) (*(++_components.begin()));
+	}
+
+	return (Component*)(*(_components.begin()));
+}
+
+SceneNode*
+SceneObject::display(ImGuiTreeNodeFlags flag, SceneNode* current)
+{
+	if (_children.size() > 0) {
+		// com filhos para mostrar
+		auto open = ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+
+		if (open) {
+			std::list<Reference<SceneObject>>::iterator it;
+			for (it = _children.begin(); it != _children.end(); ++it) {
+				current = (*it)->display(flag, current);
+			}
+
+			ImGui::TreePop();
+		}
+	}
+	else {
+		// sem filhos para mostrar
+		flag |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+		ImGui::TreeNodeEx(
+			this,
+			current == this ? flag | ImGuiTreeNodeFlags_Selected : flag,
+			this->name()
+		);
+
+		if (ImGui::IsItemClicked())
+			current = this;
+	}
+
+	return current;
 }
 
 } // end namespace cg
