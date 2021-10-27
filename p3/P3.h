@@ -116,6 +116,7 @@ private:
 
   void renderObjects(SceneObject* obj);
   void preview(Camera& c);
+  void focus();
 
 }; // P3
 

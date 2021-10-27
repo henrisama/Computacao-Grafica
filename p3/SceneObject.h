@@ -106,6 +106,9 @@ public:
   /// add component to the list of components  
   void addComponent(Component* component);
 
+  // delete component to the list of components
+  void delComponent(Component* component);
+
 
   /// returns componet of this scene object
   Component* component();

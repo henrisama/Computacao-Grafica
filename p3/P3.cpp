@@ -463,15 +463,24 @@ P3::addComponentButton(SceneObject& object)
     {
         if (ImGui::MenuItem("Primitive"))
         {
-            // TODO
+            if (dynamic_cast<Transform*>(object.component()))
+            {
+                object.addComponent(makePrimitive(_defaultMeshes.find("Box")));
+            }
         }
         if (ImGui::MenuItem("Light"))
         {
-            // TODO
+            if (dynamic_cast<Transform*>(object.component()))
+            {
+                object.addComponent(new Light);
+            }
         }
         if (ImGui::MenuItem("Camera"))
         {
-            // TODO
+            if (dynamic_cast<Transform*>(object.component()))
+            {
+                object.addComponent(new Camera);
+            }
         }
         ImGui::EndPopup();
     }
@@ -490,8 +499,7 @@ P3::sceneObjectGui()
     ImGui::Separator();
     if (ImGui::CollapsingHeader(object->transform()->typeName()))
         ImGui::TransformEdit(object->transform());
-    // **Begin inspection of temporary components
-    // It should be replaced by your component inspection
+
     auto component = object->component();
 
     if (auto p = dynamic_cast<Primitive*>(component))
@@ -501,7 +509,8 @@ P3::sceneObjectGui()
 
         if (!notDelete)
         {
-            // TODO: delete primitive
+            // delete primitive
+            object->delComponent(component);
         }
         else if (open)
             inspectPrimitive(*p);
@@ -513,7 +522,8 @@ P3::sceneObjectGui()
 
         if (!notDelete)
         {
-            // TODO: delete light
+            // delete light
+            object->delComponent(component);
         }
         else if (open)
             inspectLight(*l);
@@ -525,7 +535,8 @@ P3::sceneObjectGui()
 
         if (!notDelete)
         {
-            // TODO: delete camera
+            // delete camera
+            object->delComponent(component);
         }
         else if (open)
         {
@@ -561,11 +572,37 @@ P3::inspectorWindow()
     ImGui::End();
 }
 
+void
+P3::focus()
+{
+    if (auto current = dynamic_cast<SceneObject*>(_current))
+    {
+        auto eCameraTransform = _editor->camera()->transform();
+        auto curPosition = current->transform()->position();
+
+        auto s = current->transform()->localScale();
+        auto d = ((s[0] + s[1] + s[2]) / 3) * 5;
+
+        auto ea = eCameraTransform->eulerAngles();
+
+        auto x = d * (float)sin(math::toRadians(ea.y)) * (float)cos(math::toRadians(ea.x));
+        auto y = d * (float)-sin(math::toRadians(ea.x));
+        auto z = d * (float)cos(math::toRadians(ea.x)) * (float)cos(math::toRadians(ea.y));
+
+        curPosition += vec3f{ x,y,z };
+        eCameraTransform->setPosition(curPosition);
+    }
+}
+
 inline void
 P3::editorViewGui()
 {
     if (ImGui::Button("Set Default View"))
         _editor->setDefaultView(float(width()) / float(height()));
+
+    if (ImGui::Button("Focus"))
+        focus();
+
     ImGui::Separator();
 
     auto t = _editor->camera()->transform();
@@ -952,8 +989,6 @@ P3::render()
     }
     _editor->newFrame();
 
-    // **Begin rendering of temporary scene objects
-    // It should be replaced by your rendering code (and moved to scene editor?)
     auto ec = _editor->camera();
     const auto& p = ec->transform()->position();
     auto vp = vpMatrix(ec);
@@ -1011,6 +1046,9 @@ P3::keyInputEvent(int key, int action, int mods)
         break;
     case GLFW_KEY_Z:
         _moveFlags.enable(MoveBits::Down, active);
+        break;
+    case GLFW_KEY_F:
+        focus();
         break;
     }
     return false;

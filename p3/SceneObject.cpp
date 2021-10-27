@@ -44,9 +44,9 @@ namespace cg
 void
 SceneObject::setParent(SceneObject* parent)
 {
-	/*if (_parent == nullptr) {
+	/*if (_parent == _scene->root()) {
 		/// current scene needs to remove object from object list
-		_scene->root()->remove(this);
+		_parent->remove(this);
 	}
 	else {
 		/// current parent needs to remove object from object list
@@ -86,6 +86,12 @@ SceneObject::addComponent(Component* component)
 	_components.push_back(Component::makeUse(component));
 }
 
+void
+SceneObject::delComponent(Component* component)
+{
+	_components.remove(component);
+}
+
 bool 
 SceneObject::hasChildren()
 {
@@ -115,8 +121,6 @@ SceneObject::transform()
 Component*
 SceneObject::component()
 {
-	//return _component;
-
 	if (_components.size() == 2)
 	{
 		return (Component*) (*(++_components.begin()));

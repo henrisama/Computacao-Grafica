@@ -50,11 +50,69 @@ void
 void
 	GLRenderer::render()
 {
+	auto program = GLSL::Program::current();
 	const auto& bc = _scene->backgroundColor;
 
 	glClearColor(bc.r, bc.g, bc.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// TODO
+
+	const auto& p = _camera->transform()->position();
+	auto vp = vpMatrix(_camera);
+
+	program->setUniformMat4("vpMatrix", vp);
+	program->setUniformVec4("ambientLight", _scene->ambientLight);
+	program->setUniformVec3("lightPosition", p);
+
+	// Draw all visible primitives
+	for (const auto& obj : _scene->root()->children())
+	{
+		renderObjects(obj);
+	}
+}
+
+void
+GLRenderer::renderObjects(SceneObject* obj)
+{
+	if (!obj->visible)
+		return;
+
+	auto component = obj->component();
+
+	if (auto p = dynamic_cast<Primitive*>(component))
+		drawPrimitive(*p);
+
+	if (obj->hasChildren())
+	{
+		auto children = obj->children();
+
+		for (const auto& child : children)
+		{
+			renderObjects(child);
+		}
+	}
+}
+
+inline void
+GLRenderer::drawPrimitive(Primitive& p)
+{
+	auto program = GLSL::Program::current();
+	auto m = glMesh(p.mesh());
+
+	if (nullptr == m)
+		return;
+
+	auto t = p.transform();
+	auto normalMatrix = mat3f{ t->worldToLocalMatrix() }.transposed();
+
+	program->setUniformMat4("transform", t->localToWorldMatrix());
+	program->setUniformMat3("normalMatrix", normalMatrix);
+	program->setUniformVec4("color", p.material.diffuse);
+	program->setUniform("flatMode", (int)0);
+
+	m->bind();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawElements(GL_TRIANGLES, m->vertexCount(), GL_UNSIGNED_INT, 0);
 }
 
 } // end namespace cg

@@ -55,6 +55,8 @@ namespace cg
 
         void update() override;
         void render() override;
+        void drawPrimitive(Primitive&);
+        void renderObjects(SceneObject* obj);
 
     }; // GLRenderer
 
