@@ -33,7 +33,8 @@
 #ifndef __Light_h
 #define __Light_h
 
-#include "Component.h"
+//#include "Component.h"
+//#include "Scene.h"
 #include "graphics/Color.h"
 
 namespace cg
@@ -55,10 +56,14 @@ public:
   };
 
   Color color{Color::white};
+  bool on{ true }; // luz esta ligada ou nao
 
   Light():
     Component{"Light"},
-    _type{Directional}
+    _type{Directional},
+	  _falloff{ 1 },
+	  _fallExponent{ 0.2f },
+	  _ghama{ 30 }
   {
     // do nothing
   }
@@ -73,9 +78,55 @@ public:
     _type = type;
   }
 
+  int falloff()
+  {
+	  return _falloff;
+  }
+
+  void setFalloff(int f)
+  {
+	  _falloff = f;
+  }
+
+  float fallExponent()
+  {
+	  return _fallExponent;
+  }
+
+  void setFallExponent(float fe) 
+  {
+	  _fallExponent = fe;
+  }
+
+  vec3f position()
+  {
+	  //return _position;
+	  return this->sceneObject()->transform()->localPosition();
+  }
+
+  vec3f direction()
+  {
+	  //return _direction;
+	  return this->sceneObject()->transform()->localRotation() * vec3f { 0, 0, -1 };
+  }
+
+  float ghama()
+  {
+	  return _ghama;
+  }
+
+  void setGhama(float g)
+  {
+	  _ghama = g;
+  }
+
 private:
   Type _type;
-
+  int _falloff;
+  vec4f _position;
+  vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
+  float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
+  float _fallExponent; // expoente de decaimento
 }; // Light
 
 } // end namespace cg

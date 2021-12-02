@@ -35,11 +35,24 @@
 
 #include "SceneObject.h"
 #include "graphics/Color.h"
+#include "graphics/GLImage.h"
+#include "Camera.h"
+#include "Light.h"
+#include <list>
 
 namespace cg
 { // begin namespace cg
 
+	class SceneEditor;
+	class GLRenderer;
+	class RayTracer;
+	//class GLImage;
 
+	enum ViewMode
+	{
+		Editor = 0,
+		Renderer = 1
+	};
 /////////////////////////////////////////////////////////////////////
 //
 // Scene: scene class
@@ -47,13 +60,13 @@ namespace cg
 class Scene: public SceneNode
 {
 public:
-  Color backgroundColor{Color::gray};
-  Color ambientLight{Color::black};
+	Color backgroundColor{ Color::gray };
+	Color ambientLight{ 213, 161, 216 };
 
   /// Constructs an empty scene.
   Scene(const char* name):
     SceneNode{name},
-    _root{"\0x1bRoot", *this}
+    _root{"Root", *this}
   {
     SceneObject::makeUse(&_root);
   }
@@ -69,8 +82,86 @@ public:
     return &_root;
   }
 
-private:
+  std::list<Reference<Light>> lights()
+  {
+	  return _lights;
+  }
+
+  void addLight(Light& l)
+  {
+	  _lights.push_back(Scene::makeUse(&l));
+	  for (auto li : _lights)
+	  {
+		  std::cout << "added light from: " << li->sceneObject()->name() << "\n";
+	  }
+  }
+
+  void removeLight(Light* l)
+  {
+	  _lights.remove(l);
+	  Scene::release(l);
+  }
+
+  void removeLight(SceneObject* obj)
+  {
+	  for (auto c : obj->components())
+	  {
+		  if (auto l = dynamic_cast<Light*>(c))
+		  {
+			  _lights.remove(l);
+			  Scene::release(l);
+		  }
+	  }
+  }
+
+  Camera*
+  currentCamera()
+  {
+	  return _currentCamera;
+  }
+
+  void
+  setCurrentCamera(Camera* camera)
+  {
+	  if (camera != _currentCamera)
+	  {
+		  if (camera != nullptr && camera->sceneObject() == nullptr)
+			  return; // TODO: throw an exception
+		  _currentCamera = camera;
+	  }	  
+  }
+
+  //static Scene* current()
+  //{
+	 // return _current;
+  //}
+  
+  //static void
+  //setCurrent(Scene* scene)
+  //{
+	 // if (scene != _current)
+	 // {
+		//  if (scene != nullptr /*&& scene->sceneObject() == nullptr*/)
+		//	  return; // TODO: throw an exception
+		//  _current = scene;
+	 // }
+  //}
+
+  ViewMode _viewMode{ ViewMode::Editor };
+
+  bool _showAssets{ true };
+  bool _showEditorView{ true };
+  SceneEditor* _editor;
+  GLRenderer* _renderer;
+  RayTracer* _rayTracer;
+  GLImage* _image;
+
+private:	
+
   SceneObject _root;
+  std::list<Reference<Light>> _lights;
+  Camera* _currentCamera;
+  //static Scene* _current;
 
 }; // Scene
 

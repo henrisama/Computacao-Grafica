@@ -80,6 +80,13 @@ private:
 
 }; // Component
 
+// symbolic EndOfList to help in the remove() process
+class LastComponent final : public Component
+{
+public:
+	LastComponent() : Component{ "LastComponent" } {}
+}; //LastComponent
+
 } // end namespace cg
 
 #endif // __Component_h

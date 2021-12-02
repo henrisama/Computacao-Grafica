@@ -43,8 +43,8 @@ namespace cg
 void
 SceneObject::setParent(SceneObject* parent)
 {
-  // TODO
   _parent = parent;
+  //this->transform()->parentChanged();
 }
 
 } // end namespace cg

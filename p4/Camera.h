@@ -28,7 +28,7 @@
 // Class definition for camera.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 16/10/2019
+// Last revision: 21/09/2019
 
 #ifndef __Camera_h
 #define __Camera_h
@@ -37,7 +37,6 @@
 
 namespace cg
 { // begin namespace cg
-
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -59,6 +58,7 @@ public:
     Parallel
   };
 
+  bool show{ true }; // render camera or not
   /// Constructs a default camera.
   Camera(float aspect = 1);
 
@@ -143,7 +143,7 @@ Camera::projectionType() const
 inline float
 Camera::nearPlane() const
 {
-  return _F;
+	return _F;
 }
 
 inline mat4f
@@ -176,5 +176,4 @@ vpMatrix(const Camera* c)
 }
 
 } // end namespace cg
-
 #endif // __Camera_h

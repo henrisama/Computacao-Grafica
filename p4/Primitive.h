@@ -28,7 +28,7 @@
 // Class definition for primitive.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 30/10/2018
+// Last revision: 25/08/2018
 
 #ifndef __Primitive_h
 #define __Primitive_h
@@ -36,11 +36,16 @@
 #include "Component.h"
 #include "graphics/GLMesh.h"
 #include "Material.h"
+//#include "BVH.h"
+#include "Intersection.h"
+#include <map>
+#include <iostream>
+#include <vector>
 
 namespace cg
 { // begin namespace cg
 
-
+	class BVH;
 /////////////////////////////////////////////////////////////////////
 //
 // Primitive: primitive class
@@ -48,7 +53,8 @@ namespace cg
 class Primitive: public Component
 {
 public:
-  Material material;
+	Color color{ Color::magenta };
+	Material material;
 
   Primitive(TriangleMesh* mesh, const std::string& meshName):
     Component{"Primitive"},
@@ -56,6 +62,10 @@ public:
     _meshName(meshName)
   {
     // do nothing
+	  //std::cout << "(here)";
+	  //material = Material( color );
+	  //material.diffuse = Color::white;
+	  //std::cout << (material.diffuse == Color::white) << (material.diffuse == Color::black) << "__";
   }
 
   TriangleMesh* mesh() const
@@ -74,9 +84,11 @@ public:
     _meshName = meshName;
   }
 
-  bool intersect(const Ray& ray, float& distance) const;
+  bool intersect(const Ray& ray, Intersection& hit) const;
 
-private:
+  //static BVHMap bvhMap;
+
+private:	
   Reference<TriangleMesh> _mesh;
   std::string _meshName;
 

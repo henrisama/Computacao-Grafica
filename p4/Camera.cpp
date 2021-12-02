@@ -44,10 +44,10 @@ Camera* Camera::_current;
 
 Camera::Camera(float aspect):
   Component{"Camera"},
-  _viewAngle{60},
-  _height{10},
+  _viewAngle{45},
+  _height{5},
   _aspectRatio{aspect},
-  _F{0.01f},
+  _F{0.7f},
   _B{1000.0f},
   _projectionType{Camera::Perspective}
 {

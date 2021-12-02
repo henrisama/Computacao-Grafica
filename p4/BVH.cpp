@@ -108,6 +108,8 @@ BVH::Node::iterate(const Node* node, BVHNodeFunction f)
   }
 }
 
+
+
 inline BVH::Node*
 BVH::makeLeaf(TriangleInfoArray& triangleInfo,
   int start,
@@ -237,10 +239,10 @@ BVH::iterate(BVHNodeFunction f) const
 }
 
 bool
-BVH::intersect(const Ray& ray, Intersection& hit) const
+BVH::intersect(const Ray& ray, Intersection& hit, float distance) const
 {
-  // TODO
-  return false;
+	//TODO
+	return false;
 }
 
 } // end namespace cg

@@ -31,6 +31,7 @@
 // Last revision: 23/09/2019
 
 #include "SceneObject.h"
+#include "Light.h"
 
 namespace cg
 { // begin namespace cg
@@ -166,8 +167,18 @@ Transform::update()
   _position = translation(_matrix);
   _rotation = p->_rotation * _localRotation;
   _lossyScale = scale(_rotation, _matrix);
+  /*if (this->sceneObject()->type() != this->sceneObject()->Light)
+	  std::cout << this->sceneObject()->name();*/
   _inverseMatrix = inverseLocalMatrix() * p->_inverseMatrix;
   // TODO: update the transform of all scene object's children.
+  auto father = this->sceneObject();
+   
+  for (auto it_Object = father->children().begin();  it_Object != father->children().end(); it_Object++) {
+	  auto object = (*it_Object);
+	  object->transform()->update();	  
+  }
+
+
   changed = true;
 }
 
@@ -185,6 +196,13 @@ Transform::parentChanged()
   _lossyScale = scale(_rotation, _matrix);
   _inverseMatrix = inverseLocalMatrix() * p->_inverseMatrix;
   // TODO: update the transform of all scene object's children.
+  auto father = this->sceneObject();
+
+  for (auto it_Object = father->children().begin(); it_Object != father->children().end(); it_Object++) {
+	  auto object = (*it_Object);
+	  object->transform()->update();
+  }
+
   changed = true;
 }
 

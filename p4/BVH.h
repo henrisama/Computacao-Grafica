@@ -35,8 +35,10 @@
 
 #include "graphics/GLMesh.h"
 #include "Intersection.h"
+#include "Scene.h"
 #include <functional>
 #include <vector>
+#include <stack>
 
 namespace cg
 { // begin namespace cg
@@ -67,7 +69,7 @@ public:
   Bounds3f bounds() const;
   void iterate(BVHNodeFunction f) const;
 
-  bool intersect(const Ray& ray, Intersection& hit) const;
+  bool intersect(const Ray& ray, Intersection& hit, float distance) const;
 
 private:
   struct Node;

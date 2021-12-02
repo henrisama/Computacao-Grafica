@@ -34,6 +34,7 @@
 #define __GLRenderer_h
 
 #include "Renderer.h"
+#include "Light.h"
 #include "graphics/GLGraphics3.h"
 
 namespace cg
@@ -52,6 +53,11 @@ public:
   {
     // TODO
   }
+
+  void drawMesh(GLMesh* mesh, GLuint mode);
+  void generateSons(SceneObject* object);
+  void renderObjectTree(SceneObject*);
+  void drawPrimitive(Primitive&);
 
   void update() override;
   void render() override;

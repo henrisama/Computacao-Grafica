@@ -33,9 +33,11 @@
 #ifndef __RayTracer_h
 #define __RayTracer_h
 
+#define _CRT_SECURE_NO_DEPRECATE
 #include "graphics/Image.h"
 #include "Intersection.h"
 #include "Renderer.h"
+#include "Light.h"
 
 namespace cg
 { // begin namespace cg
@@ -74,6 +76,8 @@ public:
     _minWeight = std::max(w, MIN_WEIGHT);
   }
 
+  void hierarchyIntersection(const Ray&, Intersection&, SceneObject*);
+
   void render();
   virtual void renderImage(Image&);
 
@@ -104,6 +108,10 @@ private:
   Color shade(const Ray&, Intersection&, int, float);
   bool shadow(const Ray&);
   Color background() const;
+  //Color phong(const Ray& ray, Light& l, vec3f& p, vec3f& pNormal, Material& m, Color& ambientLight);
+  Color phong(const vec3f& rayOrigin, Light& l, vec3f& p, vec3f& pNormal, vec3f& lPos, vec3f& lDir, Material& m, Color& ambientLight);
+  void setLightRay(float x, float y);
+  void setReflectionRay(float x, float y);
 
   vec3f imageToWindow(float x, float y) const
   {

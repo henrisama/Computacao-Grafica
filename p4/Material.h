@@ -38,30 +38,33 @@
 namespace cg
 { // begin namespace cg
 
-
 /////////////////////////////////////////////////////////////////////
 //
 // Material: material class
 // ========
-class Material
+class Material : public SharedObject
 {
 public:
-  Color ambient; // ambient color
-  Color diffuse; // diffuse color
-  Color spot; // specular spot color
-  float shine; // specular spot exponent
+  Color ambient;	// ambient color
+  Color diffuse;	// diffuse color
+  Color spot;		// specular spot color
+  float shine;		// specular spot exponent
   Color specular; // specular color
 
-  Material(const Color& color = Color::white):
-    ambient{0.2f * color},
-    diffuse{0.8f * color},
-    shine{100}
+  Material(const Color& color = Color::white) :
+	  ambient{ 0.2f * color },
+	  diffuse{ 0.8f * color },
+	  spot{ Color::black },
+	  shine{ 100 }
   {
-    spot = specular = Color::black;
+	  spot = Color::black;
+	  specular = 0.9f * Color::green;
   }
 
-}; // Material
 
+ }; // Material
+
+//Material 
 } // end namespace cg
 
 #endif // __Material_h

@@ -34,6 +34,7 @@
 #define __Assets_h
 
 #include "utils/MeshReader.h"
+#include "Material.h"
 #include <map>
 #include <string>
 
@@ -44,6 +45,11 @@ using MeshRef = Reference<TriangleMesh>;
 using MeshMap = std::map<std::string, MeshRef>;
 using MeshMapIterator = typename MeshMap::const_iterator;
 
+using MaterialMap = std::map<std::string, Material*>;
+
+//using MaterialRef = Reference<Material>;
+//using MaterialMap = std::map<std::string, MaterialRef>;
+//using MaterialMapIterator = typename MaterialMap::const_iterator;
 
 /////////////////////////////////////////////////////////////////////
 //

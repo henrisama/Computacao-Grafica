@@ -35,13 +35,14 @@
 
 #include "SceneNode.h"
 #include "Transform.h"
+#include "SceneObjectList.h"
+#include "ComponentCollection.h"
 
 namespace cg
 { // begin namespace cg
 
 // Forward definition
 class Scene;
-
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -50,6 +51,14 @@ class Scene;
 class SceneObject: public SceneNode
 {
 public:
+  enum Type
+  {
+	ThreeDObject,
+	Light,
+	Camera,
+	EmptyObject
+  };
+
   bool visible{true};
 
   /// Constructs an empty scene object.
@@ -90,26 +99,85 @@ public:
   void addComponent(Component* component)
   {
     component->_sceneObject = this;
-    // TODO
-    _component = Component::makeUse(component); // temporary
+	_components.add(Component::makeUse(component));
   }
 
-  // **Begin temporary methods
-  // They should be replace by your child and component iterators
-  Component* component()
+  void deleteComponent(Component* c)
   {
-    return _component;
+	  _components.remove(c);
   }
-  // **End temporary methods
+
+  void deleteComponent(const char* const cName)
+  {
+	  _components.remove(cName);
+  }
+
+  void addChild(SceneObject* child)
+  {
+	  // child->setParent(SceneObject::makeUse(this));
+	  _children.add(SceneObject::makeUse(child));
+  }
+
+  // delete all children and all trees from them
+  void deleteChildren()
+  {
+	  for(auto child : _children)
+	  {	
+		  child->deleteChildren();
+		  _children.remove(child);
+	  }	  
+  }
+
+  // delete one child and entire tree from it
+  void deleteChild(SceneObject* child)
+  {
+	  for (auto o : child->children())
+	  {
+		  o->deleteChildren();
+	  }
+	  _children.remove(child);
+  }
+
+  // removes one child from children but keeps its children 
+  // (used in change of paternity)
+  void removeChild(SceneObject* child)
+  {
+	  _children.remove(child);
+  }
+
+  SceneObjectList children()
+  {
+	  return _children;
+  }
+
+  //prints kids's names
+  bool hasKids()
+  {	
+	  return !_children.isEmpty();
+  }
+
+  ComponentCollection components()
+  {
+	  return _components;
+  }
+
+  Type type()
+  {
+	  return _type;
+  }
+
+  void setType(Type type)
+  {
+	  _type = type;
+  }
 
 private:
+  Type _type;
   Scene* _scene;
   SceneObject* _parent;
   Transform _transform;
-  // **Begin temporary attributes
-  // They should be replace by your child and component collections
-  Reference<Component> _component;
-  // **End temporary attributes
+  SceneObjectList _children;
+  ComponentCollection _components;
 
   friend class Scene;
 
