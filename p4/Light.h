@@ -33,8 +33,7 @@
 #ifndef __Light_h
 #define __Light_h
 
-//#include "Component.h"
-#include "Scene.h"
+#include "Component.h"
 #include "graphics/Color.h"
 
 namespace cg
@@ -45,82 +44,39 @@ namespace cg
 //
 // Light: light class
 // =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+class Light: public Component
+{
+public:
+  enum Type
+  {
+    Directional,
+    Point,
+    Spot
+  };
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  Color color{Color::white};
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  Light():
+    Component{"Light"},
+    _type{Directional}
+  {
+    // do nothing
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  auto type() const
+  {
+    return _type;
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  void setType(Type type)
+  {
+    _type = type;
+  }
 
-		int falloff()
-		{
-			return _falloff;
-		}
+private:
+  Type _type;
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Light
 
 } // end namespace cg
 

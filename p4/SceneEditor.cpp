@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2019 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,19 +23,14 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: SceneEditor.cpp
 // ========
-// Class definition for light.
+// Source file for scene editor.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 23/09/2019
 
-#ifndef __Light_h
-#define __Light_h
-
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "SceneEditor.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,85 +38,63 @@ namespace cg
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// SceneEditor impementation
+// ===========
+void
+SceneEditor::setDefaultView(float aspect)
+{
+  auto t = _camera->transform();
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  t->reset();
+  t->setLocalPosition({0, 0, 10});
+  _camera->reset(aspect);
+}
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+void
+SceneEditor::zoom(float s)
+{
+  if (s > 0)
+    if (_camera->projectionType() == Camera::Perspective)
+      _camera->setViewAngle(_camera->viewAngle() / s);
+    else
+      _camera->setHeight(_camera->height() / s);
+}
 
-		auto type() const
-		{
-			return _type;
-		}
+void
+SceneEditor::rotateView(float ax, float ay)
+{
+  auto t = _camera->transform();
+  auto q = quatf{ay, vec3f{0, 1, 0}} * t->rotation();
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  t->setRotation(quatf{ax, q.rotate({1, 0, 0})} * q);
+}
 
-		int falloff()
-		{
-			return _falloff;
-		}
+void
+SceneEditor::orbit(float ax, float ay)
+{
+  auto t = _camera->transform();
+  auto p = t->position() - t->forward() * _orbitDistance;
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+  rotateView(ax, ay);
+  t->setPosition(p + t->forward() * _orbitDistance);
+}
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+void
+SceneEditor::pan(const vec3f& d)
+{
+  _camera->transform()->translate(d, Transform::Space::Local);
+}
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
+void
+SceneEditor::newFrame()
+{
+  const auto& bc = _scene->backgroundColor;
 
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+  glClearColor(bc.r, bc.g, bc.b, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  setView(_camera->transform()->position(), vpMatrix(_camera));
+  if (showGround)
+    drawXZPlane(10, 1);
+}
 
 } // end namespace cg
-
-#endif // __Light_h

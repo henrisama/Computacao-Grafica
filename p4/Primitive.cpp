@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,105 +23,47 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Primitive.cpp
 // ========
-// Class definition for light.
+// Source file for primitive.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 30/10/2018
 
-#ifndef __Light_h
-#define __Light_h
-
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "Primitive.h"
+#include "Transform.h"
 
 namespace cg
 { // begin namespace cg
 
+bool
+Primitive::intersect(const Ray& ray, float& distance) const
+{
+  if (_mesh == nullptr)
+    return false;
 
-/////////////////////////////////////////////////////////////////////
-//
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+  auto t = const_cast<Primitive*>(this)->transform();
+  Ray localRay{ray, t->worldToLocalMatrix()};
+  auto d = math::inverse(localRay.direction.length());
+  float tMin;
+  float tMax;
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
-
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
-
-		auto type() const
-		{
-			return _type;
-		}
-
-		void setType(Type type)
-		{
-			_type = type;
-		}
-
-		int falloff()
-		{
-			return _falloff;
-		}
-
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+  localRay.direction *= d;
+  if (_mesh->bounds().intersect(localRay, tMin, tMax))
+  {
+    // TODO: mesh intersection
+    if (tMin >= ray.tMin && tMin <= ray.tMax)
+    {
+      distance = tMin * d;
+      return true;
+    }
+    if (tMax >= ray.tMin && tMax <= ray.tMax)
+    {
+      distance = tMax * d;
+      return true;
+    }
+  }
+  return false;
+}
 
 } // end namespace cg
-
-#endif // __Light_h

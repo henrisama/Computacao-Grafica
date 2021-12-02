@@ -23,38 +23,46 @@ P3::buildScene()
     _current = _scene = new Scene{ "Scene 1" };
     _editor = new SceneEditor{ *_scene };
     _editor->setDefaultView((float)width() / (float)height());
-    // **Begin initialization of temporary attributes
-    // It should be replaced by your scene initialization
     {
         auto camera = new Camera;
         SceneObject* obj = new SceneObject{ "Camera 1", *_scene };
         obj->addComponent(camera);
         obj->setParent(_scene->root());
+        obj->transform()->setLocalPosition(vec3f(0,0,20));
         _scene->root()->append(obj);
 
         obj = new SceneObject{ "Box 1", *_scene };
         obj->addComponent(makePrimitive(_defaultMeshes.find("Box")));
         obj->setParent(_scene->root());
+        obj->transform()->setLocalPosition(vec3f(0, 5, 0));
         _scene->root()->append(obj);
 
         obj = new SceneObject{ "Sphere 1", *_scene };
         obj->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
         obj->setParent(_scene->root());
+        obj->transform()->setLocalPosition(vec3f(0, -5, 0));
         _scene->root()->append(obj);
 
         obj = new SceneObject{ "Object 1", *_scene };
         obj->setParent(_scene->root());
         _scene->root()->append(obj);
 
+        obj = new SceneObject{ "Light 1", *_scene };
+        obj->addComponent(new Light);
+        obj->setParent(_scene->root());
+        _scene->root()->append(obj);
+
         Camera::setCurrent(camera);
     }
-    // **End initialization of temporary attributes
 }
 
 void
 P3::initialize()
 {
     Application::loadShaders(_program, "shaders/p3.vs", "shaders/p3.fs");
+    Application::loadShaders(_phongProgram, "shaders/phong.vs", "shaders/phong.fs");
+    Application::loadShaders(_gouraudProgram, "shaders/gouraud.vs", "shaders/gouraud.fs");
+
     Assets::initialize();
     buildDefaultMeshes();
     buildScene();
@@ -76,153 +84,175 @@ P3::hierarchyWindow()
     {
         if (ImGui::MenuItem("Empty Object"))
         {
-            // TODO: create an empty object.
-            std::string name = "";
-            name
+            _name = "";
+            SceneObject* ob;
+
+            if(_current != _scene)
+                ob = (SceneObject*)_current;
+            else
+                ob = ((Scene*)_current)->root();
+
+            _name
                 .append("Object ")
                 .append(std::to_string(objectCount++));
 
-            if (_current != _scene)
-            {
-                SceneObject* ob = (SceneObject*)_current;
-                _newObject = new SceneObject{ name.c_str(), *_scene };
-                _newObject->setParent(ob);
-                ob->append(_newObject);
-            }
-            else
-            {
-                Scene* ob = (Scene*)_current;
-                _newObject = new SceneObject{ name.c_str(), *_scene };
-                _newObject->setParent(ob->root());
-                ob->root()->append(_newObject);
-            }
+            _newObject = new SceneObject{ _name.c_str(), *_scene };
+            _newObject->setParent(ob);
+            ob->append(_newObject);
+
         }
         if (ImGui::BeginMenu("3D Object"))
         {
             if (ImGui::MenuItem("Box"))
             {
-                // TODO: create a new box.
-                std::string name = "";
+                _name = "";
+                SceneObject* ob;
 
                 if (_current != _scene)
-                {
-                    SceneObject* ob = (SceneObject*)_current;
-
-                    auto component = ob->component();
-                    if (!dynamic_cast<Camera*>(component))
-                    {
-                        name
-                            .append("Box ")
-                            .append(std::to_string(boxCount++));
-
-                        _newObject = new SceneObject{ name.c_str(), *_scene };
-                        _newObject->setParent(ob);
-                        _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-                        ob->append(_newObject);
-                    }
-                }
+                    ob = (SceneObject*)_current;
                 else
+                    ob = ((Scene*)_current)->root();
+
+                /// condição para não criar box dentro de um objeto de cena com componente camera ou light
+                if (!dynamic_cast<Camera*>(ob->component())
+                    && !dynamic_cast<Light*>(ob->component()))
                 {
-                    name
+                    _name
                         .append("Box ")
                         .append(std::to_string(boxCount++));
 
-                    Scene* ob = (Scene*)_current;
-                    _newObject = new SceneObject{ name.c_str(), *_scene };
-                    _newObject->setParent(ob->root());
+                    _newObject = new SceneObject{ _name.c_str(), *_scene };
+                    _newObject->setParent(ob);
                     _newObject->addComponent(makePrimitive(_defaultMeshes.find("Box")));
-                    ob->root()->append(_newObject);
+                    ob->append(_newObject);
                 }
             }
             if (ImGui::MenuItem("Sphere"))
             {
-                // TODO: create a new sphere.
-                std::string name = "";
+                _name = "";
+                SceneObject* ob;
 
-                if (_current != _scene) {
-                    SceneObject* ob = (SceneObject*)_current;
-
-                    auto component = ob->component();
-                    if (!dynamic_cast<Camera*>(component))
-                    {
-                        name
-                            .append("Sphere ")
-                            .append(std::to_string(sphereCount++));
-
-                        _newObject = new SceneObject{ name.c_str(), *_scene };
-                        _newObject->setParent(ob);
-                        _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
-                        ob->append(_newObject);
-                    }
-                }
+                if (_current != _scene)
+                    ob = (SceneObject*)_current;
                 else
+                    ob = ((Scene*)_current)->root();
+
+                /// condição para não criar sphere dentro de um objeto de cena com componente camera ou light
+                if (!dynamic_cast<Camera*>(ob->component())
+                    && !dynamic_cast<Light*>(ob->component()))
                 {
-                    name
-                        .append("Box ")
-                        .append(std::to_string(boxCount++));
-                    Scene* ob = (Scene*)_current;
-                    _newObject = new SceneObject{ name.c_str(), *_scene };
-                    _newObject->setParent(ob->root());
+                    _name
+                        .append("Sphere  ")
+                        .append(std::to_string(sphereCount++));
+
+                    _newObject = new SceneObject{ _name.c_str(), *_scene };
+                    _newObject->setParent(ob);
                     _newObject->addComponent(makePrimitive(_defaultMeshes.find("Sphere")));
-                    ob->root()->append(_newObject);
+                    ob->append(_newObject);
                 }
             }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Light"))
         {
+            _name = "";
+            SceneObject* ob;
+            auto light = new Light;
+
             if (ImGui::MenuItem("Directional Light"))
             {
-                // TODO: create a new directional light.
+                _name
+                    .append("Light ")
+                    .append(std::to_string(lightCount++));
+
+                light->setType(Light::Directional);
+
+                if (_current != _scene)
+                    ob = (SceneObject*)_current;
+                else
+                    ob = ((Scene*)_current)->root();
+
+                _newObject = new SceneObject{ _name.c_str(), *_scene };
+                _newObject->setParent(ob);
+                _newObject->addComponent(light);
+                ob->append(_newObject);
             }
             if (ImGui::MenuItem("Point Light"))
             {
-                // TODO: create a new pontual light.
+                _name
+                    .append("Light ")
+                    .append(std::to_string(lightCount++));
+
+                light->setType(Light::Point);
+
+                if (_current != _scene)
+                    ob = (SceneObject*)_current;
+                else
+                    ob = ((Scene*)_current)->root();
+
+                _newObject = new SceneObject{ _name.c_str(), *_scene };
+                _newObject->setParent(ob);
+                _newObject->addComponent(light);
+                ob->append(_newObject);
             }
             if (ImGui::MenuItem("Spotlight"))
             {
-                // TODO: create a new spotlight.
+                _name
+                    .append("Light ")
+                    .append(std::to_string(lightCount++));
+
+                light->setType(Light::Spot);
+
+                if (_current != _scene)
+                    ob = (SceneObject*)_current;
+                else
+                    ob = ((Scene*)_current)->root();
+
+                _newObject = new SceneObject{ _name.c_str(), *_scene };
+                _newObject->setParent(ob);
+                _newObject->addComponent(light);
+                ob->append(_newObject);
             }
             ImGui::EndMenu();
         }
         if (ImGui::MenuItem("Camera"))
         {
-            // TODO: create a new camera.
-            std::string name = "";
+            _name = "";
+            SceneObject* ob;
 
-            if (_current != _scene) {
-                SceneObject* ob = (SceneObject*)_current;
-
-                auto component = ob->component();
-                if (!dynamic_cast<Camera*>(component))
-                {
-                    name
-                        .append("Camera ")
-                        .append(std::to_string(cameraCount++));
-
-                    auto camera = new Camera;
-                    _newObject = new SceneObject{ name.c_str(), *_scene };
-                    _newObject->setParent(ob);
-                    _newObject->addComponent(camera);
-                    ob->append(_newObject);
-                }
-            }
+            if (_current != _scene)
+                ob = (SceneObject*)_current;
             else
+                ob = ((Scene*)_current)->root();
+
+            /// condição para não criar camera dentro de um objeto de cena com componente camera ou light
+            if (!dynamic_cast<Camera*>(ob->component())
+                && !dynamic_cast<Light*>(ob->component()))
             {
-                name
+                _name
                     .append("Camera ")
                     .append(std::to_string(cameraCount++));
 
-                Scene* ob = (Scene*)_current;
                 auto camera = new Camera;
-                _newObject = new SceneObject{ name.c_str(), *_scene };
+                _newObject = new SceneObject{ _name.c_str(), *_scene };
+                _newObject->setParent(ob);
                 _newObject->addComponent(camera);
-                _newObject->setParent(_scene->root());
-                ob->root()->append(_newObject);
+                ob->append(_newObject);
             }
         }
         ImGui::EndPopup();
     }
+
+    if (ImGui::Button("Delete"))
+    {
+        if (_current != _scene)
+        {
+            SceneObject* ob = (SceneObject*)_current;
+            _current = ob->parent();
+            ob->deleteIt();
+        }
+    }
+
     ImGui::Separator();
 
     auto flag{ ImGuiTreeNodeFlags_OpenOnArrow };
@@ -619,8 +649,26 @@ P3::editorViewGui()
     {
         static int sm;
 
-        ImGui::Combo("Shading Mode", &sm, "None\0Flat\0Gouraud\0\0");
+        ImGui::Combo("Shading Mode", &sm, "None\0Flat\0Gouraud\0Phong\0");
         // TODO
+
+        switch (sm)
+        {
+            case 0:
+                _program.use();
+                break;
+            case 1:
+                
+                break;
+            case 2:
+                _gouraudProgram.use();
+                break;
+            case 3:
+                _phongProgram.use();
+                break;
+            default:
+                break;
+        }
 
         static Color edgeColor;
         static bool showEdges;
@@ -795,6 +843,7 @@ drawMesh(GLMesh* mesh, GLuint mode)
 inline void
 P3::drawPrimitive(Primitive& primitive)
 {
+    auto program = GLSL::Program::current();
     auto m = glMesh(primitive.mesh());
 
     if (nullptr == m)
@@ -803,16 +852,16 @@ P3::drawPrimitive(Primitive& primitive)
     auto t = primitive.transform();
     auto normalMatrix = mat3f{ t->worldToLocalMatrix() }.transposed();
 
-    _program.setUniformMat4("transform", t->localToWorldMatrix());
-    _program.setUniformMat3("normalMatrix", normalMatrix);
-    _program.setUniformVec4("color", primitive.material.diffuse);
-    _program.setUniform("flatMode", (int)0);
+    program->setUniformMat4("transform", t->localToWorldMatrix());
+    program->setUniformMat3("normalMatrix", normalMatrix);
+    program->setUniformVec4("color", primitive.material.diffuse);
+    program->setUniform("flatMode", (int)0);
     m->bind();
     drawMesh(m, GL_FILL);
     if (primitive.sceneObject() != _current)
         return;
-    _program.setUniformVec4("color", _selectedWireframeColor);
-    _program.setUniform("flatMode", (int)1);
+    program->setUniformVec4("color", _selectedWireframeColor);
+    program->setUniform("flatMode", (int)1);
     drawMesh(m, GL_LINE);
 }
 
@@ -820,12 +869,112 @@ inline void
 P3::drawLight(Light& light)
 {
     // TODO
+    std::vector<vec3f> lightVertexes;
+
+    if (light.type() == light.Directional) {
+        lightVertexes = {
+            // corpo da luz directional
+            { 0,0.2,0.5 }, { 0,0.2,-0.5 }, { -0.2,0,0.5 }, { -0.2,0,-0.5 },
+            { 0,0,0.5 }, { 0,0,-0.5 }, { 0.2,0,0.5 }, { 0.2,0,-0.5 },
+            { 0,-0.2,0.5 }, { 0,-0.2,-0.5 },
+
+            // setinhas das pontas
+            { 0,0.2,-0.5 }, { -0.125,0.2,-0.25 }, { 0,0.2,-0.5 }, { 0.125,0.2,-0.25 },
+            { -0.2,0,-0.5 }, { -0.325,0,-0.25 }, { -0.2,0,-0.5 }, { 0.325,0,-0.25 },
+            { 0,0,-0.5 }, { -0.125,0,-0.25 }, { 0,0,-0.5 }, { 0.125,0,-0.25 },
+            { 0.2,0,-0.5 }, { 0.075,0,-0.25 }, { 0.2,0,-0.5 }, { 0.375,0,-0.25 },
+            { 0,-0.2,-0.5 }, { -0.125,-0.2,-0.25 }, { 0,-0.2,-0.5 }, { 0.125,-0.2,-0.25 }
+        };
+    }
+    else if (light.type() == light.Point) {
+        lightVertexes = {
+            { 0,0.2,0 }, { 0,0,0.2 }, { 0,0,0.2 }, { 0.2,0,0 },
+            { 0.2,0,0 }, { 0,0.2,0 }, { 0,-0.2,0 }, { 0,0,-0.2 },
+            { 0,0,-0.2 }, { -0.2,0,0 }, { -0.2,0,0 }, { 0,-0.2,0 },
+            { 0,0.2,0 }, { 0,0,0.2 }, { 0,0,0.2 }, { -0.2,0,0 },
+            { -0.2,0,0 }, { 0,0.2,0 }, { 0,-0.2,0 }, { 0,0,0.2 },
+            { 0,0,0.2 }, { 0.2,0,0 }, { 0.2,0,0 }, { 0,-0.2,0 },
+            { 0,-0.2,0 }, { 0,0,0.2 }, { 0,0,0.2 }, { -0.1,0,0 },
+            { -0.2,0,0 }, { 0,-0.2,0 }, { 0,0.2,0 }, { 0,0,-0.2 },
+            { 0,0,-0.2 }, { 0.2,0,0 }, { 0.2,0,0 }, { 0,0.2,0 }
+        };
+    }
+    else if (light.type() == light.Spot) {
+
+        lightVertexes = {
+            { 0,0,0 }, { -0.5,1.5,-0.5 }, { 0,0,0 }, { 0.5,1.5,-0.5 },
+            { 0,0,0 }, { 0.5,1.5,0.5 }, { 0,0,0 }, { -0.5,1.5,0.5 },
+            { -0.5,1.5,-0.5 }, { 0.5,1.5,-0.5 }, { 0.5,1.5,-0.5 },  { 0.5,1.5,0.5 },
+            { 0.5,1.5,0.5 }, { -0.5,1.5,0.5 }, { -0.5,1.5,0.5 }, { -0.5,1.5,-0.5 }
+        };
+        // size of the draw
+        float spotSize = 1.25;
+
+        // calculates radius
+        auto circleRadius = (float) tan(math::toRadians<float>(light.ghama())) * spotSize;
+
+        // position of circle of spot light drawing
+        vec3f circleCenter{ 0, 0, -spotSize };
+        vec3f circleLeftEdge{ circleRadius, 0, -spotSize };
+        vec3f circleRightEdge{ -circleRadius, 0, -spotSize };
+        vec3f circleUpperEdge{ 0, circleRadius, -spotSize };
+        vec3f circleBottomEdge{ 0, -circleRadius, -spotSize };
+
+        circleCenter = light.transform()->transform(circleCenter);
+        circleLeftEdge = light.transform()->transform(circleLeftEdge);
+        circleRightEdge = light.transform()->transform(circleRightEdge);
+        circleUpperEdge = light.transform()->transform(circleUpperEdge);
+        circleBottomEdge = light.transform()->transform(circleBottomEdge);
+
+        // normal of the circle
+        auto circleNormal = light.transform()->rotation() * vec3f { 0, 0, -1 };
+
+        auto spotEdge = light.transform()->transform(vec3f(0, 0, 0));
+
+        // save scale
+        auto temp = light.transform()->localScale();
+        light.transform()->setLocalScale({ 1,1,1 });
+
+        _editor->setLineColor(light.color);
+        _editor->drawCircle(circleCenter, circleRadius, circleNormal);
+        _editor->drawLine(spotEdge, circleLeftEdge);
+        _editor->drawLine(spotEdge, circleRightEdge);
+        _editor->drawLine(spotEdge, circleUpperEdge);
+        _editor->drawLine(spotEdge, circleBottomEdge);
+
+
+        light.transform()->setLocalScale(temp);
+        _editor->setLineColor(Color::blue);
+    }
+
+    if (light.type() != Light::Spot)
+    {
+        auto lightTransform = light.transform();
+        auto pos = lightTransform->position();
+
+        // save scale
+        auto temp = lightTransform->localScale();
+
+        lightTransform->setLocalScale({ 1,1,1 });
+
+        for (int i = 0; i < lightVertexes.size(); i++) {
+            lightVertexes[i] = lightTransform->transform(lightVertexes[i]);
+        }
+
+        _editor->setLineColor(light.color);
+        for (int i = 0; i < lightVertexes.size() / 2; i++) {
+            _editor->drawLine(lightVertexes[i * 2], lightVertexes[(i * 2) + 1]);
+        }
+
+        // reset previous scale & line color
+        lightTransform->setLocalScale(temp);
+        _editor->setLineColor(Color::blue);
+    }
 }
 
 inline void
 P3::drawCamera(Camera& cam)
 {
-    // TODO
     constexpr auto scale = .6f;
 
     auto height_on = [&](float z) -> float
@@ -907,7 +1056,6 @@ P3::renderScene()
         _renderer->setCamera(camera);
         _renderer->setImageSize(width(), height());
         _renderer->render();
-        _program.use();
     }
 }
 
@@ -915,7 +1063,9 @@ constexpr auto CAMERA_RES = 0.01f;
 constexpr auto ZOOM_SCALE = 1.01f;
 
 void
-P3::preview(Camera& c) {
+P3::preview(Camera& c) 
+{
+    _phongProgram.use();
 
     glEnable(GL_SCISSOR_TEST);
     glScissor(0, 0, width() / 4, height() / 4);
@@ -924,7 +1074,6 @@ P3::preview(Camera& c) {
     _renderer->setCamera(&c);
     _renderer->setImageSize(width(), height());
     _renderer->render();
-    _program.use();
 
     glViewport(0, 0, width(), height());
     glDisable(GL_SCISSOR_TEST);
@@ -942,6 +1091,8 @@ P3::renderObjects(SceneObject* obj)
         drawPrimitive(*p);
     else if (auto c = dynamic_cast<Camera*>(component))
         drawCamera(*c);
+    else if (auto c = dynamic_cast<Light*>(component))
+        drawLight(*c);
 
     if (obj == _current)
     {
@@ -963,6 +1114,8 @@ P3::renderObjects(SceneObject* obj)
 void
 P3::render()
 {
+    auto program = GLSL::Program::current();
+
     if (_viewMode == ViewMode::Renderer)
     {
         renderScene();
@@ -993,9 +1146,9 @@ P3::render()
     const auto& p = ec->transform()->position();
     auto vp = vpMatrix(ec);
 
-    _program.setUniformMat4("vpMatrix", vp);
-    _program.setUniformVec4("ambientLight", _scene->ambientLight);
-    _program.setUniformVec3("lightPosition", p);
+    program->setUniformMat4("vpMatrix", vp);
+    program->setUniformVec4("ambientLight", _scene->ambientLight);
+    program->setUniformVec3("lightPosition", p);
     
     for (const auto& obj : _scene->root()->children())
     {

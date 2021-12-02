@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,19 +23,19 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Primitive.h
 // ========
-// Class definition for light.
+// Class definition for primitive.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 30/10/2018
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __Primitive_h
+#define __Primitive_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "Component.h"
+#include "graphics/GLMesh.h"
+#include "Material.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,85 +43,45 @@ namespace cg
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Primitive: primitive class
+// =========
+class Primitive: public Component
+{
+public:
+  Material material;
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  Primitive(TriangleMesh* mesh, const std::string& meshName):
+    Component{"Primitive"},
+    _mesh{mesh},
+    _meshName(meshName)
+  {
+    // do nothing
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  TriangleMesh* mesh() const
+  {
+    return _mesh;
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  const char* const meshName() const
+  {
+    return _meshName.c_str();
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  void setMesh(TriangleMesh* mesh, const std::string& meshName)
+  {
+    _mesh = mesh;
+    _meshName = meshName;
+  }
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  bool intersect(const Ray& ray, float& distance) const;
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+private:
+  Reference<TriangleMesh> _mesh;
+  std::string _meshName;
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Primitive
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __Primitive_h

@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,105 +23,63 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Component.h
 // ========
-// Class definition for light.
+// Class definition for scene object component.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 25/08/2018
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __Component_h
+#define __Component_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "core/SharedObject.h"
 
 namespace cg
 { // begin namespace cg
 
+// Forward definitions
+class SceneObject;
+class Transform;
+
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Component: scene object component class
+// =========
+class Component: public SharedObject
+{
+public:
+  /// Returns the type name of this component.
+  auto typeName() const
+  {
+    return _typeName;
+  }
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  /// Returns the scene object owning this component.
+  auto sceneObject() const
+  {
+    return _sceneObject;
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  /// Returns the transform of this component.
+  Transform* transform(); // implemented in SceneObject.h
 
-		auto type() const
-		{
-			return _type;
-		}
+protected:
+  Component(const char* const typeName):
+    _typeName{typeName}
+  {
+    // do nothing
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+private:
+  const char* const _typeName;
+  SceneObject* _sceneObject{};
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  friend class SceneObject;
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Component
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __Component_h

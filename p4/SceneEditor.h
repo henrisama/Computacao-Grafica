@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2019 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,19 +23,19 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: SceneEditor.h
 // ========
-// Class definition for light.
+// Class definition for scene editor.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 23/09/2019
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __SceneEditor_h
+#define __SceneEditor_h
 
-//#include "Component.h"
+#include "Camera.h"
 #include "Scene.h"
-#include "graphics/Color.h"
+#include "graphics/GLGraphics3.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,85 +43,59 @@ namespace cg
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// SceneEditor: scene editor class
+// ===========
+class SceneEditor: public GLGraphics3
+{
+public:
+  bool showGround{true};
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  SceneEditor(Scene& scene):
+    _scene{&scene},
+    _editor{"\0x1bSceneEditor", scene},
+    _camera{new Camera}
+  {
+    SceneObject::makeUse(&_editor);
+    _editor.setParent(scene.root());
+    _editor.addComponent(_camera);
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  const Camera* camera() const
+  {
+    return _camera;
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  Camera* camera()
+  {
+    return _camera;
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  void setDefaultView(float aspect = 1);
+  void zoom(float s);
+  void rotateView(float ax, float ay);
+  void orbit(float ax, float ay);
+  void pan(const vec3f& d);
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  void pan(float dx, float dy, float dz)
+  {
+    pan({dx, dy, dz});
+  }
+    
+  auto orbitDistance() const
+  {
+    return _orbitDistance;
+  }
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+  void newFrame();
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+private:
+  Reference<Scene> _scene;
+  SceneObject _editor;
+  Reference<Camera> _camera;
+  float _orbitDistance{10};
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // SceneEditor
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __SceneEditor_h

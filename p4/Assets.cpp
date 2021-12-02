@@ -23,105 +23,60 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Assets.cpp
 // ========
-// Class definition for light.
+// Source file for assets.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 01/10/2019
 
-#ifndef __Light_h
-#define __Light_h
-
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "Assets.h"
+#include "graphics/Application.h"
+#include <filesystem>
 
 namespace cg
 { // begin namespace cg
 
+namespace fs = std::filesystem;
+
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Assets implementation
+// ======
+MeshMap Assets::_meshes;
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+void
+Assets::initialize()
+{
+  fs::path meshPath{Application::assetFilePath("meshes/")};
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  if (fs::is_directory(meshPath))
+  {
+    auto p = fs::directory_iterator(meshPath);
 
-		auto type() const
-		{
-			return _type;
-		}
+    for (auto e = fs::directory_iterator(); p != e; ++p)
+      if (fs::is_regular_file(p->status()))
+        _meshes[p->path().filename().string()] = nullptr;
+  }
+}
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+TriangleMesh*
+Assets::loadMesh(MeshMapIterator mit)
+{
+  if (mit == _meshes.end())
+    return nullptr;
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  TriangleMesh* m{mit->second};
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+  if (m == nullptr)
+  {
+    auto filename = "meshes/" + mit->first;
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+    m = Application::loadMesh(filename.c_str());
+    _meshes[mit->first] = m;
+  }
+  return m;
+}
 
 } // end namespace cg
-
-#endif // __Light_h

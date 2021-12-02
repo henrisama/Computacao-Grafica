@@ -23,105 +23,69 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Renderer.h
 // ========
-// Class definition for light.
+// Class definition for generic renderer.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 21/09/2019
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __Renderer_h
+#define __Renderer_h
 
-//#include "Component.h"
+#include "Camera.h"
 #include "Scene.h"
-#include "graphics/Color.h"
 
 namespace cg
 { // begin namespace cg
 
 
-/////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Renderer: generic renderer class
+// ========
+class Renderer: public virtual SharedObject
+{
+public:
+  // Constructors
+  Renderer() = default;
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  Renderer(Scene&, Camera* = nullptr);
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  auto scene() const
+  {
+    return _scene;
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  auto camera() const
+  {
+    return _camera;
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  void imageSize(int& w, int &h) const
+  {
+    w = _W;
+    h = _H;
+  }
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  void setScene(Scene&);
+  void setCamera(Camera*);
+  void setImageSize(int, int);
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+  vec3f project(const vec3f&) const;
+  vec3f unproject(const vec3f&) const;
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+  virtual void update();
+  virtual void render() = 0;
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
+protected:
+  Reference<Scene> _scene;
+  Reference<Camera> _camera;
+  int _W{};
+  int _H{};
 
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Renderer
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __Renderer_h

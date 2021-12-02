@@ -23,105 +23,95 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: RayTracer.h
 // ========
-// Class definition for light.
+// Class definition for simple ray tracer.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 16/10/2019
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __RayTracer_h
+#define __RayTracer_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "graphics/Image.h"
+#include "Intersection.h"
+#include "Renderer.h"
 
 namespace cg
 { // begin namespace cg
 
+#define MIN_WEIGHT float(0.001)
+#define MAX_RECURSION_LEVEL uint32_t(20)
+
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// RayTracer: simple ray tracer class
+// =========
+class RayTracer: public Renderer
+{
+public:
+  // Constructor
+  RayTracer(Scene&, Camera* = 0);
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  auto maxRecursionLevel() const
+  {
+    return _maxRecursionLevel;
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  auto minWeight() const
+  {
+    return _minWeight;
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  void setMaxRecursionLevel(uint32_t rl)
+  {
+    _maxRecursionLevel = std::min(rl, MAX_RECURSION_LEVEL);
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  void setMinWeight(float w)
+  {
+    _minWeight = std::max(w, MIN_WEIGHT);
+  }
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  void render();
+  virtual void renderImage(Image&);
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+private:
+  struct VRC
+  {
+    vec3f u;
+    vec3f v;
+    vec3f n;
+  };
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+  uint32_t _maxRecursionLevel;
+  float _minWeight;
+  uint64_t _numberOfRays;
+  uint64_t _numberOfHits;
+  Ray _pixelRay;
+  VRC _vrc;
+  float _Vh;
+  float _Vw;
+  float _Ih;
+  float _Iw;
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
+  void scan(Image& image);
+  void setPixelRay(float x, float y);
+  Color shoot(float x, float y);
+  bool intersect(const Ray&, Intersection&);
+  Color trace(const Ray& ray, uint32_t level, float weight);
+  Color shade(const Ray&, Intersection&, int, float);
+  bool shadow(const Ray&);
+  Color background() const;
 
-		vec4f position()
-		{
-			return _position;
-		}
+  vec3f imageToWindow(float x, float y) const
+  {
+    return _Vw * (x * _Iw - 0.5f) * _vrc.u + _Vh * (y * _Ih - 0.5f) * _vrc.v;
+  }
 
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // RayTracer
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __RayTracer_h

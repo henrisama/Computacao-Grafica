@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2019 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,105 +23,79 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: BVH.h
 // ========
-// Class definition for light.
+// Class definition for BVH.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 18/11/2019
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __BVH_h
+#define __BVH_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "graphics/GLMesh.h"
+#include "Intersection.h"
+#include <functional>
+#include <vector>
 
 namespace cg
 { // begin namespace cg
 
+struct BVHNodeInfo
+{
+  Bounds3f bounds;
+  bool isLeaf;
+  int firstTriangleIndex;
+  int numberOfTriangles;
 
-/////////////////////////////////////////////////////////////////////
-//
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+}; // BVHNodeInfo
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+using BVHNodeFunction = std::function<void(const BVHNodeInfo&)>;
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+class BVH: public SharedObject
+{
+public:
+  BVH(TriangleMesh& mesh, int maxTrisPerNode = 16);
 
-		auto type() const
-		{
-			return _type;
-		}
+  ~BVH() override;
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+  const TriangleMesh* mesh() const
+  {
+    return _mesh;
+  }
 
-		int falloff()
-		{
-			return _falloff;
-		}
+  Bounds3f bounds() const;
+  void iterate(BVHNodeFunction f) const;
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+  bool intersect(const Ray& ray, Intersection& hit) const;
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+private:
+  struct Node;
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
+  using TriangleIndexArray = std::vector<int>;
 
-		vec4f position()
-		{
-			return _position;
-		}
+  Reference<TriangleMesh> _mesh;
+  TriangleIndexArray _triangles;
+  Node* _root{};
+  int _nodeCount{};
+  int _maxTrisPerNode;
 
-		float ghama()
-		{
-			return _ghama;
-		}
+  struct TriangleInfo;
 
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
+  using TriangleInfoArray = std::vector<TriangleInfo>;
 
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+  Node* makeLeaf(TriangleInfoArray&,
+    int start,
+    int end,
+    TriangleIndexArray&);
+
+  Node* makeNode(TriangleInfoArray&,
+    int start,
+    int end,
+    TriangleIndexArray&);
+
+}; // BVH
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __BVH_h

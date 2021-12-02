@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,19 +23,17 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: SceneNode.h
 // ========
-// Class definition for light.
+// Class definition for generic scene node.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 25/08/2018
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __SceneNode_h
+#define __SceneNode_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "core/NameableObject.h"
 
 namespace cg
 { // begin namespace cg
@@ -43,85 +41,27 @@ namespace cg
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// SceneNode: generic scene node class
+// =========
+class SceneNode: public NameableObject
+{
+public:
+  using NameableObject::NameableObject;
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  template <typename T>
+  T* as()
+  {
+    return dynamic_cast<T*>(this);
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  template <typename T>
+  const T* as() const
+  {
+    return dynamic_cast<const T*>(this);
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
-
-		void setType(Type type)
-		{
-			_type = type;
-		}
-
-		int falloff()
-		{
-			return _falloff;
-		}
-
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // SceneNode
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __SceneNode_h

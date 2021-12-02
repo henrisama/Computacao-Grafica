@@ -1,6 +1,6 @@
 //[]---------------------------------------------------------------[]
 //|                                                                 |
-//| Copyright (C) 2018, 2019 Orthrus Group.                         |
+//| Copyright (C) 2018 Orthrus Group.                               |
 //|                                                                 |
 //| This software is provided 'as-is', without any express or       |
 //| implied warranty. In no event will the authors be held liable   |
@@ -23,105 +23,39 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Intersection.h
 // ========
-// Class definition for light.
+// Class definition for intersection ray/object.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 21/11/2018
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __Intersection_h
+#define __Intersection_h
 
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "geometry/Ray.h"
 
 namespace cg
-{ // begin namespace cg
+{ // begin namespace Graphics
+
+class Primitive;
+class TriangleShape;
 
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Intersection: intersection ray/object class
+// ============
+struct Intersection
+{
+  const Primitive* object; // object intercepted by the ray
+  int triangleIndex; // index of the triangle intercepted by the ray
+  float distance; // distance from the ray's origin to the intersection point
+  vec3f p; // barycentric coordinates of the intersection point
+  void* userData; // any user data
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
-
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
-
-		auto type() const
-		{
-			return _type;
-		}
-
-		void setType(Type type)
-		{
-			_type = type;
-		}
-
-		int falloff()
-		{
-			return _falloff;
-		}
-
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Intersection
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __Intersection_h

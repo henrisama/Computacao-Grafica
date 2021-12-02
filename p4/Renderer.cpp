@@ -23,105 +23,81 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Renderer.cpp
 // ========
-// Class definition for light.
+// Source file for generic renderer.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 21/09/2019
 
-#ifndef __Light_h
-#define __Light_h
-
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "Renderer.h"
 
 namespace cg
 { // begin namespace cg
 
 
-/////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// Renderer implementation
+// ========
+Renderer::Renderer(Scene& scene, Camera* camera):
+  _scene{&scene},
+  _camera{camera != nullptr ? camera : new Camera}
+{
+  // do nothing
+}
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+void
+Renderer::setScene(Scene& scene)
+{
+  if (&scene != _scene)
+    _scene = &scene;
+}
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+void
+Renderer::setCamera(Camera* camera)
+{
+  if (camera != _camera)
+    _camera = camera != nullptr ? camera : new Camera;
+}
 
-		auto type() const
-		{
-			return _type;
-		}
+void
+Renderer::setImageSize(int w, int h)
+{
+  _camera->setAspectRatio((float)(_W = w) / (float)(_H = h));
+}
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+void
+Renderer::update()
+{
+  // do nothing
+}
 
-		int falloff()
-		{
-			return _falloff;
-		}
+inline vec3f
+normalize(const vec4f& p)
+{
+  return vec3f{p} * math::inverse(p.w);
+}
 
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
+vec3f
+Renderer::project(const vec3f& p) const
+{
+  auto w = normalize(vpMatrix(_camera) * vec4f{p, 1});
 
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
+  w.x = (w.x * 0.5f + 0.5f) * _W;
+  w.y = (w.y * 0.5f + 0.5f) * _H;
+  w.z = (w.z * 0.5f + 0.5f);
+  return w;
+}
 
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
+vec3f
+Renderer::unproject(const vec3f& w) const
+{
+  vec4f p{w.x / _W * 2 - 1, w.y / _H * 2 - 1, w.z * 2 - 1, 1};
+  mat4f m{vpMatrix(_camera)};
 
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+  m.invert();
+  return normalize(m * p);
+}
 
 } // end namespace cg
-
-#endif // __Light_h

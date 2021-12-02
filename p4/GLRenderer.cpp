@@ -23,105 +23,38 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: GLRenderer.cpp
 // ========
-// Class definition for light.
+// Source file for OpenGL renderer.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 09/09/2019
 
-#ifndef __Light_h
-#define __Light_h
-
-//#include "Component.h"
-#include "Scene.h"
-#include "graphics/Color.h"
+#include "GLRenderer.h"
 
 namespace cg
 { // begin namespace cg
 
 
-/////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 //
-// Light: light class
-// =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+// GLRenderer implementation
+// ==========
+void
+GLRenderer::update()
+{
+  Renderer::update();
+  // TODO
+}
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+void
+GLRenderer::render()
+{
+  const auto& bc = _scene->backgroundColor;
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
-
-		auto type() const
-		{
-			return _type;
-		}
-
-		void setType(Type type)
-		{
-			_type = type;
-		}
-
-		int falloff()
-		{
-			return _falloff;
-		}
-
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+  glClearColor(bc.r, bc.g, bc.b, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  // TODO
+}
 
 } // end namespace cg
-
-#endif // __Light_h

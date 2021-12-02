@@ -23,18 +23,17 @@
 //|                                                                 |
 //[]---------------------------------------------------------------[]
 //
-// OVERVIEW: Light.h
+// OVERVIEW: Scene.h
 // ========
-// Class definition for light.
+// Class definition for scene.
 //
 // Author(s): Paulo Pagliosa (and your name)
-// Last revision: 14/10/2019
+// Last revision: 21/09/2019
 
-#ifndef __Light_h
-#define __Light_h
+#ifndef __Scene_h
+#define __Scene_h
 
-//#include "Component.h"
-#include "Scene.h"
+#include "SceneObject.h"
 #include "graphics/Color.h"
 
 namespace cg
@@ -43,85 +42,38 @@ namespace cg
 
 /////////////////////////////////////////////////////////////////////
 //
-// Light: light class
+// Scene: scene class
 // =====
-	class Light : public Component
-	{
-	public:
-		enum Type
-		{
-			Directional,
-			Point,
-			Spot
-		};
+class Scene: public SceneNode
+{
+public:
+  Color backgroundColor{Color::gray};
+  Color ambientLight{Color::black};
 
-		Color color{ Color::white };
-		bool on{ true }; // luz esta ligada ou nao
+  /// Constructs an empty scene.
+  Scene(const char* name):
+    SceneNode{name},
+    _root{"\0x1bRoot", *this}
+  {
+    SceneObject::makeUse(&_root);
+  }
 
-		Light() :
-			Component{ "Light" },
-			_type{ Directional },
-			_falloff{ 1 },
-			_fallExponent{ 0.2 },
-			_ghama{ 30 }
-		{
-			// do nothing
-		}
+  /// Returns the root scene object of this scene.
+  auto root() const
+  {
+    return &_root;
+  }
 
-		auto type() const
-		{
-			return _type;
-		}
+  auto root()
+  {
+    return &_root;
+  }
 
-		void setType(Type type)
-		{
-			_type = type;
-		}
+private:
+  SceneObject _root;
 
-		int falloff()
-		{
-			return _falloff;
-		}
-
-		void setFalloff(int f)
-		{
-			_falloff = f;
-		}
-
-		float fallExponent()
-		{
-			return _fallExponent;
-		}
-
-		void setFallExponent(float fe)
-		{
-			_fallExponent = fe;
-		}
-
-		vec4f position()
-		{
-			return _position;
-		}
-
-		float ghama()
-		{
-			return _ghama;
-		}
-
-		void setGhama(float g)
-		{
-			_ghama = g;
-		}
-
-	private:
-		Type _type;
-		int _falloff;
-		vec4f _position;
-		vec3f _direction; //passivel de mudança (_position pode ser interpretado como _direction)
-		float _ghama; // notacao do capitulo 4 para luz spot, angulo de abertura
-		float _fallExponent; // expoente de decaimento
-	}; // Light
+}; // Scene
 
 } // end namespace cg
 
-#endif // __Light_h
+#endif // __Scene_h

@@ -1,75 +1,74 @@
-#ifndef __P3_h
-#define __P3_h
+#ifndef __P4_h
+#define __P4_h
 
 #include "Assets.h"
+#include "BVH.h"
 #include "GLRenderer.h"
 #include "Light.h"
 #include "Primitive.h"
 #include "SceneEditor.h"
+#include "RayTracer.h"
 #include "core/Flags.h"
 #include "graphics/Application.h"
-#include <vector>
+#include "graphics/GLImage.h"
 
 using namespace cg;
 
-class P3 : public GLWindow
+class P4: public GLWindow
 {
 public:
-    P3(int width, int height) :
-        GLWindow{ "cg2021 - P3", width, height },
-        _program{ "P3" }
-    {
-        // do nothing
-    }
+  P4(int width, int height):
+    GLWindow{"cg2021 - P4", width, height},
+    _program{"P4"}
+  {
+    // do nothing
+  }
 
-    /// Initialize the app.
-    void initialize() override;
+  /// Initialize the app.
+  void initialize() override;
 
-    /// Update the GUI.
-    void gui() override;
+  /// Update the GUI.
+  void gui() override;
 
-    /// Render the scene.
-    void render() override;
+  /// Render the scene.
+  void render() override;
 
 private:
-    enum ViewMode
-    {
-        Editor = 0,
-        Renderer = 1
-    };
+  enum ViewMode
+  {
+    Editor = 0,
+    GL_Renderer = 1,
+    RT_Renderer = 2
+  };
 
-    enum class MoveBits
-    {
-        Left = 1,
-        Right = 2,
-        Forward = 4,
-        Back = 8,
-        Up = 16,
-        Down = 32
-    };
+  enum class MoveBits
+  {
+    Left = 1,
+    Right = 2,
+    Forward = 4,
+    Back = 8,
+    Up = 16,
+    Down = 32
+  };
 
-    enum class DragBits
-    {
-        Rotate = 1,
-        Pan = 2
-    };
+  enum class DragBits
+  {
+    Rotate = 1,
+    Pan = 2
+  };
 
-    GLSL::Program _program;
-    GLSL::Program _phongProgram{ "Phong" };
-    GLSL::Program _gouraudProgram{ "Gouraud" };
-    Reference<Scene> _scene;
-    Reference<SceneEditor> _editor;
-    Reference<GLRenderer> _renderer;
+  using BVHRef = Reference<BVH>;
+  using BVHMap = std::map<TriangleMesh*, BVHRef>;
 
-    std::vector<Reference<SceneObject>> _objects;
-    Reference<SceneObject> _newObject;
-    std::string _name;
-    int boxCount = 2;
-    int objectCount = 2;
-    int sphereCount = 2;
-    int cameraCount = 2;
-    int lightCount = 2;
-
+  GLSL::Program _program;
+  Reference<Scene> _scene;
+  Reference<SceneEditor> _editor;
+  Reference<GLRenderer> _renderer;
+  // **Begin temporary attributes
+  // Those are just to show some geometry
+  // They should be replaced by your scene hierarchy
+  std::vector<Reference<SceneObject>> _objects;
+  // **End temporary attributes
   SceneNode* _current{};
   Color _selectedWireframeColor{255, 102, 0};
   Flags<MoveBits> _moveFlags{};
@@ -81,6 +80,9 @@ private:
   bool _showAssets{true};
   bool _showEditorView{true};
   ViewMode _viewMode{ViewMode::Editor};
+  Reference<RayTracer> _rayTracer;
+  Reference<GLImage> _image;
+  BVHMap bvhMap;
 
   static MeshMap _defaultMeshes;
 
@@ -116,12 +118,10 @@ private:
   bool mouseButtonInputEvent(int, int, int) override;
   bool mouseMoveEvent(double, double) override;
 
+  Ray makeRay(int, int) const;
+
   static void buildDefaultMeshes();
 
-  void renderObjects(SceneObject* obj);
-  void preview(Camera& c);
-  void focus();
+}; // P4
 
-}; // P3
-
-#endif // __P3_h
+#endif // __P4_h
